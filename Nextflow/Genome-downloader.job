@@ -1,0 +1,10 @@
+#!/bin/bash
+# Submission script for Nic5
+#SBATCH --time=5-01:00:00 # days-hh:mm:ss
+#
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=2625 # megabytes
+#SBATCH --partition=bio
+
+/home/ulg/bioec/lcornet/nextflow run Genome-downloader.nf --taxolevel=<FIELD1> --group=<FIELD2>
