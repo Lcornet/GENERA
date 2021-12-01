@@ -308,7 +308,7 @@ process longreadsassembly {
                 """
                 """
             }
-            esle {
+            else {
                 """
                 canu -pacbio-raw pb.fastq genomeSize=$size maxMemory=$ram maxThreads=$cpu stopOnLowCoverage=5 cnsErrorRate=0.25 -p CANU -d CANU useGrid=false
                 cp CANU/CANU.contigs.fasta LR_assembly.fasta

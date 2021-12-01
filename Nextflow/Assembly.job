@@ -10,4 +10,5 @@
 export OMP_NUM_THREADS=20
 export MKL_NUM_THREADS=20
 
-/home/ulg/bioec/lcornet/nextflow run Assembly.nf --shortreadsR1=<FIELD1> --shortreadsR2=<FIELD2> --cpu=20
+module --ignore-cache load Nextflow/21.08.0
+nextflow run Assembly.nf --shortreadsR1=<FIELD1> --shortreadsR2=<FIELD2> --pbreads=<FIELD3> --genomeSIZE=<FIELD4> --cpu=20
