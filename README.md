@@ -27,3 +27,4 @@ https://bccm.belspo.be/content/bccm-collections-genomic-era
 This softwares is copyright (c) 2017-2021 by University of Liege / Sciensano / BCCM collection by Luc CORNET
 This is free softwares; you can redistribute it and/or modify.
 
+![BCCM](https://github.com/Lcornet/GENERA/blob/main/images/GENERA-logo.png)  
