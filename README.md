@@ -29,7 +29,7 @@ https://bccm.belspo.be/content/bccm-collections-genomic-era
    https://www.biorxiv.org/content/10.1101/2021.12.07.471566v1
 5. Phylogenomic analyses of Snodgrassella isolates from honeybees and bumblebees reveals taxonomic and functional diversity.
    Cornet, L.,  Cleenwerck, I., Praet, J., Leonard, R., Vereecken, N.J., Michez, D., Smagghe, G., Baurain, D., Vandamme, P. (2021)
-6. Contamination detection in genomic data: more is not enough.
+6. Contamination detection in genomic data: more is not enough.  
    Cornet, L., Baurain, L. (2021)
 
 # Copyright and License
