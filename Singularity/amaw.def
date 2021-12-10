@@ -1,0 +1,286 @@
+BootStrap: library
+From: omatt/default/mpi:3.1.1
+
+%files
+    Trinity-v2.4.0.tar.gz /opt/
+    bowtie2-2.3.5-linux-x86_64.zip /opt/
+    jellyfish-2.3.0.tar.gz /opt/
+    salmon-1.5.2_linux_x86_64.tar.gz /opt/
+    ncbi-blast-2.10.0+-x64-linux.tar.gz /opt/
+    trf409.linux64 /opt/
+    rmblast-2.9.0+-p2-x64-linux.tar.gz /opt/
+    RepeatMasker-4.1.1.tar.gz /opt/
+    exonerate-2.2.0-x86_64.tar.gz /opt/
+    maker-2.31.11.tgz /opt/
+    amaw-generic.pl /opt/
+    transcript-filter.pl /opt/
+    prot_db/ /opt/
+    convert_fathom2genbank.pl /opt/
+
+%environment
+    export PATH=/opt/usr/local/bin:$PATH
+    export PATH=/usr/local/ncbi-blast-2.10.0+/bin:$PATH
+    export PERL5LIB="/usr/local/bioperl-live:$PERL5LIB"
+    export PATH=/usr/local/trf-linux:$PATH
+    export PATH=/usr/local/RepeatMasker:$PATH
+    export PATH=/usr/local/exonerate-2.2.0-x86_64/bin:$PATH
+    export PATH=/usr/local/SNAP:$PATH
+    export PATH=/usr/local/maker/bin:$PATH
+    export PATH=/usr/local/bowtie2-2.3.5-linux-x86_64:$PATH
+    export PATH=/usr/local/salmon-1.5.2_linux_x86_64/bin:$PATH
+    export PATH=/usr/local/kallisto:$PATH
+    export PATH=/usr/local/trinityrnaseq-Trinity-v2.4.0:$PATH
+    export TRINITY_HOME=/usr/local/trinityrnaseq-Trinity-v2.4.0/
+    export TOOLDIR=/usr/local/samtools
+    export PATH=/usr/local/samtools/bamtools/bin:$PATH
+    export PATH=/usr/local/augustus/bin:$PATH
+    export AUGUSTUS_CONFIG_PATH=/mnt/augustus-config/
+    export ZOE="/usr/local/SNAP/Zoe"
+    export PATH=/opt/sratoolkit/bin:$PATH    
+    export PATH=/opt/cdhit:$PATH
+
+%post
+    #Update part
+    #permission part
+    chmod -R 777 /opt #chmod775 can be enough
+    chmod -R 777 /root #chmod775 can be enough
+    #modules
+    yum install -y git
+    yum install -y automake autoconf
+    yum install -y make
+    yum install -y zlib-devel    
+    yum install -y bzip2-devel
+    yum install -y xz-devel
+    yum install -y zip unzip
+    yum install -y gcc gcc-c++ make
+    yum install -y epel-release
+    yum install -y cmake3
+    ln -s /usr/bin/cmake3 /usr/bin/cmake
+    yum install -y rsync
+    yum install -y https://repo.ius.io/ius-release-el7.rpm
+    yum install -y python36u
+    yum install -y wget
+    yum install -y epel-release
+    yum install -y boost boost-thread boost-devel
+    yum install curl-devel -y
+    yum install -y perl-CPAN
+    yum install -y cpanminus
+    yum install -y patch
+    yum install -y perl-DBD-Pg
+    #capnm
+    cpanm LWP::Simple --force
+    cpanm LWP::Protocol::https --force
+    cpanm XML::SAX --force 
+    cpanm XML::SAX::DocumentLocator --force
+    cpanm XML::LibXML --force
+    cpanm aliased --force
+    cpanm Bio::MUST::Core    
+    cpanm DBI
+    cpanm DBD::SQLite
+    cpanm forks
+    cpanm File::Which
+    cpanm Perl::Unsafe::Signals
+    cpanm Bit::Vector
+    cpanm IO::All
+    cpanm IO::Prompt    
+    cpanm Text::Soundex
+    cpanm Getopt::Euclid
+    cpanm List::UtilsBy
+    cpanm Data::UUID
+    cpanm XML::Bare
+    cpanm POSIX
+    cpanm Template
+    cpanm File::ShareDir::Install
+    cpanm Modern::Perl
+    cpanm Smart::Comments
+    cpanm TAP::Harness
+
+    #MAKER part
+    #NCBI blast
+    cd /usr/local/
+    mv /opt/ncbi-blast-2.10.0+-x64-linux.tar.gz .
+    tar -zxvf ncbi-blast-2.10.0+-x64-linux.tar.gz 
+    #Bio perl
+    cd /usr/local/
+    git clone https://github.com/bioperl/bioperl-live 
+    #TRF
+    cd /usr/local/
+    mkdir trf-linux
+    mv /opt/trf409.linux64 trf-linux/
+    cd trf-linux/
+    mv trf409.linux64 trf
+    chmod a+x trf
+    #rmblast
+    cd /usr/local/
+    mv /opt/rmblast-2.9.0+-p2-x64-linux.tar.gz .
+    tar -zxvf rmblast-2.9.0+-p2-x64-linux.tar.gz
+    #RepeatMasker
+    cd /usr/local/
+    mv /opt/RepeatMasker-4.1.1.tar.gz .
+    tar -zxvf RepeatMasker-4.1.1.tar.gz 
+    cd RepeatMasker/
+    perl ./configure -trf_prgm=/usr/local/trf-linux/trf -rmblast_dir=/usr/local/rmblast-2.11.0/bin/
+    #exonerate
+    cd /usr/local/
+    mv /opt/exonerate-2.2.0-x86_64.tar.gz .
+    tar -zxvf exonerate-2.2.0-x86_64.tar.gz
+    #SNAP
+    cd /usr/local/
+    git clone https://github.com/KorfLab/SNAP
+    cd SNAP/
+    make
+    #maker
+    cd /usr/local/
+    mv /opt/maker-2.31.11.tgz .
+    tar -zxvf maker-2.31.11.tgz 
+    cd maker/src/
+    echo y | perl Build.PL 
+    echo y | ./Build installdeps
+    ./Build install
+
+    #Trinity part
+    #bowtie
+    cd /usr/local/
+    mv /opt/bowtie2-2.3.5-linux-x86_64.zip .
+    unzip bowtie2-2.3.5-linux-x86_64.zip
+    #jellyfish
+    cd /usr/local/
+    mv /opt/jellyfish-2.3.0.tar.gz .
+    tar -zxvf jellyfish-2.3.0.tar.gz
+    cd jellyfish-2.3.0
+    ./configure && make && make install
+    #salmon
+    cd /usr/local/
+    mv /opt/salmon-1.5.2_linux_x86_64.tar.gz .
+    tar -zxvf salmon-1.5.2_linux_x86_64.tar.gz
+    #trinity
+    cd /usr/local/
+    mv /opt/Trinity-v2.4.0.tar.gz .
+    tar -zxvf Trinity-v2.4.0.tar.gz
+    cd trinityrnaseq-Trinity-v2.4.0/
+    make
+    make plugins
+    #java
+    yum install -y java-11-openjdk-devel
+    #numpy
+    pip3 install numpy
+
+
+    #Augustus part
+    #htslib
+    cd /usr/local/
+    mkdir samtools
+    cd /usr/local/samtools/
+    wget https://github.com/samtools/htslib/releases/download/1.13/htslib-1.13.tar.bz2
+    tar -vxjf htslib-1.13.tar.bz2
+    mv htslib-1.13 htslib
+    cd htslib
+    ./configure
+    make
+    make install 
+    chmod -R 777 /usr/local/samtools/htslib/htslib
+    #bcftools
+    cd /usr/local/samtools/
+    wget https://github.com/samtools/bcftools/releases/download/1.13/bcftools-1.13.tar.bz2
+    tar -vxjf bcftools-1.13.tar.bz2
+    mv bcftools-1.13 bcftools   
+    cd bcftools
+    make
+    make install
+    #samtools
+    wget https://github.com/samtools/samtools/releases/download/1.13/samtools-1.13.tar.bz2
+    tar -vxjf samtools-1.13.tar.bz2
+    mv samtools-1.13 samtools
+    cd samtools
+    ./configure --without-curses
+    make
+    make install        
+    #bamtools
+    cd /usr/local/samtools/
+    git clone git://github.com/pezmaster31/bamtools.git
+    cd bamtools
+    mkdir build
+    cd build
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local/samtools/bamtools ..
+    make
+    make install
+    #Augustus
+    cd /usr/local/
+    wget http://bioinf.uni-greifswald.de/augustus/binaries/old/augustus-3.3.3.tar.gz
+    tar -zxvf augustus-3.3.3.tar.gz
+    mv augustus-3.3.3 augustus
+    cd augustus
+    cd auxprogs
+    sed -i 's/cd\ bam2wig/#cd\ bam2wig/g' Makefile
+    cd bam2hints
+    sed -i 's/INCLUDES\ \=\ \/usr\/include\/bamtools/INCLUDES\ \= \$\(BAMTOOLS\)\/include\/bamtools/g' Makefile
+    sed -i 's/LIBS\ \=\ \-lbamtools\ \-lz/LIBS\ \=\ \$\(BAMTOOLS\)\/lib64\/libbamtools\.a\ \-lz/g' Makefile
+    cd ../filterBam/src/
+    sed -i 's/BAMTOOLS\ \=\ \/usr\/include\/bamtools/\#\ BAMTOOLS\ \=\ \/usr\/include\/bamtools/g' Makefile
+    sed -i 's/INCLUDES\ \=\ \-I\$(BAMTOOLS)\ \-Iheaders\ \-I\.\/bamtools/INCLUDES\ \=\ \-I\$(BAMTOOLS)\/include\/bamtools\ \-Iheaders\ \-I\.\/bamtools/g' Makefile
+    sed -i 's/LIBS\ \=\ \-lbamtools\ \-lz/LIBS\ \=\ \$\(BAMTOOLS\)\/lib64\/libbamtools\.a\ \-lz/g' Makefile
+    cd ../../../
+    make clean
+    make BAMTOOLS=/usr/local/samtools/bamtools
+    export AUGUSTUS_CONFIG_PATH=/mnt/augustus-config/
+
+    #sratoolkit
+    cd /opt/
+    wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.9.6/sratoolkit.2.9.6-ubuntu64.tar.gz
+    tar -xvzf sratoolkit.2.9.6-ubuntu64.tar.gz
+    mv sratoolkit.2.9.6-ubuntu64 sratoolkit
+
+    #RSEM
+    cd /opt/
+    wget https://github.com/deweylab/RSEM/archive/refs/tags/v1.2.31.tar.gz
+    mv v1.2.31.tar.gz RSEM-v1.2.31.tar.gz
+    tar -xzf RSEM-v1.2.31.tar.gz
+    #cd RSEM/
+    cd RSEM-1.2.31
+    make
+    make install
+
+    #kallisto
+    cd /usr/local/
+    wget https://github.com/pachterlab/kallisto/releases/download/v0.46.1/kallisto_linux-v0.46.1.tar.gz
+    tar -xzf kallisto_linux-v0.46.1.tar.gz
+
+    #amaw
+    mv /opt/amaw-generic.pl /opt/amaw.pl
+    chmod a+x /opt/amaw.pl
+    mv /opt/amaw.pl /usr/local/bin/
+    cd /usr/local/
+    mkdir prot_dbs
+    mv /opt/prot_db/* /usr/local/prot_dbs/
+    mv /opt/transcript-filter.pl /usr/local/
+    mv /opt/convert_fathom2genbank.pl /usr/local/
+
+    #cd-hit
+    cd /opt/
+    git clone https://github.com/weizhongli/cdhit
+    cd cdhit/
+    make
+
+%runscript
+    echo "This container contains : "
+    echo "AUGUSTUS (3.3.3)"
+    echo "bamtools 2.4.1"
+    echo "samtools 1.10-2-gc62a0f1"
+    echo "htslib 1.10.2-1"
+    echo "Trinity-v3.4.0"
+    echo "salmon 1.1.0"
+    echo "jellyfish 2.3.0"
+    echo "bowtie2.3.5.1"
+    echo "maker 2.31.10"
+    echo "SNAP version 2006-07-28"
+    echo "exonerate version 2.2.0"
+    echo "RepeatMasker - 4.1.0"
+    echo "TRFlinux64"
+    echo "ncbi-blast-2.10.0+" 
+
+%help
+    This is a container for AMAW
+ 
+%labels
+    Author Meunier Loic - Baurain Denis - Luc Cornet
+    Version v1.O.O

@@ -1,0 +1,15 @@
+#!/bin/bash
+# Submission script for Nic5
+#SBATCH --time=5-01:00:00 # days-hh:mm:ss
+#
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+#SBATCH --mem-per-cpu=2625 # megabytes
+#SBATCH --partition=bio
+
+export OMP_NUM_THREADS=20
+export MKL_NUM_THREADS=20
+
+mkdir GENERA-annotation
+singularity exec --bind <FIELD1>:/mnt /scratch/ulg/GENERA/prodigal-2.6.3.sif prodigal -i /mnt/<FIELD2>.fna -o /mnt/GENERA.out -a /mnt/<FIELD2>.faa -d /mnt/<FIELD2>.genes.fna
+mv GENERA.out *.faa *.genes.fna GENERA-annotation/

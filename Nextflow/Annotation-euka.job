@@ -1,0 +1,13 @@
+#!/bin/bash
+# Submission script for Nic5
+#SBATCH --time=5-01:00:00 # days-hh:mm:ss
+#
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+#SBATCH --mem-per-cpu=2625 # megabytes
+#SBATCH --partition=bio
+
+export OMP_NUM_THREADS=20
+export MKL_NUM_THREADS=20
+
+singularity exec --bind /scratch/ulg/GENERA/Databases/AMAW,<FIELD1>:/mnt /scratch/ulg/GENERA/amaw.sif amaw.pl --genome=/mnt/<FIELD2> --organism=<FIELD3> --proteins=1 --est=1 --taxdir=/mnt/taxdump/ --maker-cpus=20 --trinity-cpus=20 --rsem-cpus=20 --augustus-db=/mnt/augustus-config/ --augustus-gm=<FIELD4> --outdir=/mnt/GENERA-annotation --prot-dbs=/mnt/prot_dbs/
