@@ -24,9 +24,9 @@ https://bccm.belspo.be/content/bccm-collections-genomic-era
    Cornet, L., Ahn, A.-C., Wilmotte, A., and Baurain, D. (2021).  
    Genes 12, 1741. doi:10.3390/genes12111741.  
    https://www.mdpi.com/2073-4425/12/11/1741/html  
-4. AMAW: automated gene annotation for non-model eukaryotic genomes.
-   Meunier, L., Baurain, D., Cornet, L. (2021)
-   https://www.biorxiv.org/content/10.1101/2021.12.07.471566v1
+4. AMAW: automated gene annotation for non-model eukaryotic genomes.  
+   Meunier, L., Baurain, D., Cornet, L. (2021)  
+   https://www.biorxiv.org/content/10.1101/2021.12.07.471566v1  
 5. Phylogenomic analyses of Snodgrassella isolates from honeybees and bumblebees reveals taxonomic and functional diversity.
    Cornet, L.,  Cleenwerck, I., Praet, J., Leonard, R., Vereecken, N.J., Michez, D., Smagghe, G., Baurain, D., Vandamme, P. (2021)
 6. Contamination detection in genomic data: more is not enough.  
