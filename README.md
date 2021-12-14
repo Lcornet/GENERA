@@ -27,8 +27,9 @@ https://bccm.belspo.be/content/bccm-collections-genomic-era
 4. AMAW: automated gene annotation for non-model eukaryotic genomes.  
    Meunier, L., Baurain, D., Cornet, L. (2021)  
    https://www.biorxiv.org/content/10.1101/2021.12.07.471566v1  
-5. Phylogenomic analyses of Snodgrassella isolates from honeybees and bumblebees reveals taxonomic and functional diversity.
-   Cornet, L.,  Cleenwerck, I., Praet, J., Leonard, R., Vereecken, N.J., Michez, D., Smagghe, G., Baurain, D., Vandamme, P. (2021)
+5. Phylogenomic analyses of Snodgrassella isolates from honeybees and bumblebees reveals taxonomic and functional diversity.  
+   Cornet, L.,  Cleenwerck, I., Praet, J., Leonard, R., Vereecken, N.J., Michez, D., Smagghe, G., Baurain, D., Vandamme, P. (2021)  
+   https://www.biorxiv.org/content/10.1101/2021.12.10.472130v1  
 6. Contamination detection in genomic data: more is not enough.  
    Cornet, L., Baurain, L. (2021)
 
