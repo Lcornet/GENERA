@@ -57,11 +57,14 @@ def main(main_file, mode, taxa, refgroup):
                 if ('#' in sum_record):
                     continue
                 else:
-                    #print(sum_record)
-                    split_list = sum_record.split("\t")
-                    link = split_list[19]
-                    if (link != 'na'):
-                        sum_out.write(sum_record + "\n")
+                    if ('http' in sum_record): 
+                        #print(sum_record)
+                        split_list = sum_record.split("\t")
+                        link = split_list[19]
+                        if (link != 'na'):
+                            sum_out.write(sum_record + "\n")
+                    else:
+                        continue
     
     elif (mode == 'fetch'):
         #define if it's from genbank or refseq
