@@ -9,7 +9,7 @@ Please visit
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
 # NEWS
-!!! Annotation of genomes has been added to GENERA tools !!!
+28/01 !!!  Multi locus Maximum Likelihood Phylogeny has been added to GENERA tools !!!
 
 # Publications
 1. ToRQuEMaDA: tool for retrieving queried Eubacteria, metadata and dereplicating assemblies.  
