@@ -9,7 +9,7 @@ Please visit
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
 # NEWS
-03/02 !!!  OGs DNA reverse translate has been added to GENERA tools !!!
+03/02 !!!  OGs DNA reverse translate has been added to GENERA tools !!!  
 28/01 !!!  Multi locus Maximum Likelihood Phylogeny has been added to GENERA tools !!!
 
 # Publications
