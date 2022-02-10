@@ -1,0 +1,138 @@
+Bootstrap: yum
+OSVersion: 8
+MirrorURL: http://dl.rockylinux.org/pub/rocky/%{OSVERSION}/BaseOS/x86_64/os/
+Include: yum
+
+%files
+    OGsEnrichment_companion.py /opt/ 
+
+%environment
+    export PATH=/opt/usr/local/bin:$PATH
+    export PATH=/opt/BMGE-1.12:$PATH
+    export PATH=/opt/hmmer/bin:$PATH
+    export PATH=/opt/Prodigal:$PATH
+    export PATH=/opt/pplacer-Linux-v1.1.alpha17:$PATH
+    export PATH=/opt/mafft-7.471-with-extensions/core:$PATH
+    export PATH=/opt/muscle:$PATH
+    export PATH=/opt/scafos:$PATH 
+    export SCAFOS=/opt/scafos
+    export PATH=/opt/ncbi-blast-2.10.0+/bin:$PATH
+    #export PATH=/opt/rnammer:$PATH
+    export PATH=/opt/bedtools2/bin:$PATH
+    export PATH=/opt/barrnap/bin:$PATH
+    export PATH=/opt/cdhit:$PATH
+    export PATH=/opt/standard-RAxML:$PATH
+    export PATH=/usr/local/bin:$PATH
+    export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+    export CFLAGS="-I/usr/local/include"
+    export LDFLAGS="-L/usr/local/lib"
+    export PATH=/opt/Mash:$PATH
+    export PATH=/opt/ANIcalculator_v1:$PATH
+    export PATH=/opt/ORPER:$PATH 
+    export PATH=/opt/R/4.0.5/bin:$PATH  
+    export PATH=/opt/CONSENSE:$PATH
+    export PATH=/opt/exonerate-2.2.0-x86_64/bin:$PATH
+
+%post
+    #Update part
+    #permission part
+    chmod -R 777 /opt #chmod775 can be enough
+    chmod -R 777 /root #chmod775 can be enough
+    #modules
+    yum install -y git
+    yum install -y automake autoconf
+    yum install -y make
+    yum install -y zlib-devel    
+    #yum install -y bzip2-devel
+    yum install -y glibc-devel
+    yum install -y xz-devel
+    yum install -y zip unzip
+    yum install -y gcc gcc-c++ make 
+    yum install -y epel-release
+    yum install -y cmake3
+    #ln -s /usr/bin/cmake3 /usr/bin/cmake
+    yum install -y rsync
+    #yum install -y https://repo.ius.io/ius-release-el7.rpm
+    yum install -y python3
+    yum install -y wget
+    yum install -y epel-release
+    yum install -y boost boost-thread boost-devel
+    yum install -y perl-CPAN
+    yum install -y cpanminus
+    yum install -y patch
+    yum install -y java-11-openjdk-devel
+    yum install -y capnproto
+    yum install -y perl-LWP-Protocol-https    
+    yum install -y tar
+    yum -y install glibc-locale-source
+    localedef -i en_US -f UTF-8 en_US.UTF-8
+    pip3 install click
+    ln -s /usr/bin/python3 /usr/bin/python    
+
+    #capnm module + BMC
+    cpanm LWP::Simple --force
+    cpanm aliased --force
+    cpanm Bio::MUST::Core
+    cpanm Bio::MUST::Drivers
+    cpanm Bio::MUST::Apps::FortyTwo
+
+    #Programs
+    #bzip2
+    wget https://sourceforge.net/projects/bzip2/files/latest/download
+    mv download bzip2-1.0.6.tar.gz
+    tar -xzf bzip2-1.0.6.tar.gz
+    cd bzip2-1.0.6
+    make
+    make install
+
+    #Prodigal
+    cd /opt
+    git clone https://github.com/hyattpd/Prodigal
+    cd Prodigal/
+    make install
+
+    #Mafft
+    cd /opt/
+    wget https://mafft.cbrc.jp/alignment/software/mafft-7.471-with-extensions-src.tgz
+    gunzip -cd mafft-7.471-with-extensions-src.tgz | tar xfv -
+    cd mafft-7.471-with-extensions
+    cd core/
+    make clean
+    make
+    make install
+
+    #MUSCLE
+    cd /opt/
+    mkdir muscle
+    cd muscle/
+    wget https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
+    tar -xzf muscle3.8.31_i86linux64.tar.gz
+
+    #Blast
+    cd /opt/    
+    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.10.0/ncbi-blast-2.10.0+-x64-linux.tar.gz
+    tar -zxvf ncbi-blast-2.10.0+-x64-linux.tar.gz
+
+    #Exonerate
+    cd /opt/
+    wget http://ftp.ebi.ac.uk/pub/software/vertebrategenomics/exonerate/exonerate-2.2.0-x86_64.tar.gz
+    tar -xzf exonerate-2.2.0-x86_64.tar.gz
+    export PATH=/opt/exonerate-2.2.0-x86_64/bin:$PATH
+
+    #companion
+    cd /opt/
+    mkdir companion
+    mv OGsEnrichment_companion.py companion/
+
+%runscript
+    echo "This container contains : "
+    Bio::MUST::Core 2020070 https://metacpan.org/pod/Bio::MUST::Core  
+    MAFFT 7.471 https://mafft.cbrc.jp/alignment/software/source.html  
+
+%help
+    This is a container for Nextflow-ORganismPlacER (ORPER) 
+ 
+%labels
+    Author Luc Cornet
+    Version v0.0.1
