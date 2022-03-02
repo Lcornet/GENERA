@@ -77,7 +77,7 @@ params.mode = 'prot'
 params.jackk = 'no'
 
 //Jaccknife replicates number
-params.rep == '100'
+params.rep = '100'
 
 //Jaccknife width
 params.width = '100000'
@@ -312,7 +312,7 @@ process mlinference {
         #Without codon partition
         raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy \
         -n classic -m GTRGAMMA -N 100 -f a -x 1975021703574 -p 1975021703574
-        mv data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.classic --map-ids; mv RAxML_bipartitions.tre DNAclassic.tre
+        cp data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.classic --map-ids; mv RAxML_bipartitions.tre DNAclassic.tre
         echo "GENERA info: DNA ML inference, no partition" >> GENERA-Phylogeny.log
 
         #Two first codon only
@@ -321,14 +321,14 @@ process mlinference {
         ali2phylip.pl data-ass-blocks.ali --map-ids
         raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass-blocks.phy \
         -n two -m GTRGAMMA -N 100 -f a -x 1975021703574 -p 1975021703574
-        mv data-ass-blocks.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.two --map-ids; mv RAxML_bipartitions.tre DNAtwo.tre
+        cp data-ass-blocks.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.two --map-ids; mv RAxML_bipartitions.tre DNAtwo.tre
         echo "GENERA info: DNA ML inference, codon 1&2" >> GENERA-Phylogeny.log           
 
         #Partition on third codon
         $companion data-ass.phy --mode=third
         raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy -m GTRGAMMA -q partition.txt \
         -n third -N 100 -f a -x 1975021703574 -p 1975021703574
-        mv data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.third --map-ids; mv RAxML_bipartitions.tre DNAthird.tre
+        cp data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.third --map-ids; mv RAxML_bipartitions.tre DNAthird.tre
         echo "GENERA info: DNA ML inference, third codon partition" >> GENERA-Phylogeny.log
 
         #False file part(for Prot)
@@ -425,6 +425,7 @@ process jaccknifeMLinference {
     file '*' from jackkconcats_ch1
     file "GENERA-Phylogeny.log" from log_ch6
     val cpu from params.cpu
+    val companion from params.companion
 
     output:
     file 'trees/jackk.tre' into jackktre_ch1
@@ -533,7 +534,7 @@ process jaccknifeMLinference {
             ./makecons intree
             mv outtree jackk-two.tre
             cd  ../
-            mkdir trees
+            #mkdir trees
             mv dnaJtwo/jackk-two.tre trees/
             echo "GENERA info: jaccknife ML inferences, codon 1&2" >> GENERA-Phylogeny.log  
 
@@ -560,7 +561,7 @@ process jaccknifeMLinference {
             ./makecons intree
             mv outtree jackk-third.tre
             cd  ../
-            mkdir trees
+            #mkdir trees
             mv dnaJthird/jackk-third.tre trees/
             echo "GENERA info: jaccknife DNA inferences, partition on third codon" >> GENERA-Phylogeny.log
             """
@@ -638,6 +639,7 @@ process publicationResults {
             echo "GENERA info: false file" > jackk-DNAtwo-final.tre
             echo "GENERA info: false file" > jackk-DNAthird-final.tre
             echo "GENERA info: format-trees" >> GENERA-Phylogeny.log
+            echo "GENERA info: false file" > jackk-Prot-final.tre
             """
         }
     }
