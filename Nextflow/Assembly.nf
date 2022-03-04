@@ -502,6 +502,7 @@ process binning {
         find *.fa | cut -f2 -d"." > fa.list
         for f in `cat fa.list`; do cp bin.\$f.fa METABAT_bin-\$f.fa; done
         mv METABAT_bin*.fa ../
+        cd ../
         echo "GENERA info: no binning activated" > CONCOCT_bin-FALSE.fa
         echo "GENERA info: Metabat binning activated" >> GENERA-Assembler.log
         """ 
@@ -519,6 +520,7 @@ process binning {
         find *.fa | cut -f1 -d"." > fa.list
         for f in `cat fa.list`; do cp \$f.fa CONCOCT_bin-\$f.fa; done
         mv CONCOCT_bin* ../../
+        cd ../../
         echo "GENERA info: no binning activated" > METABAT_bin-FALSE.fa
         echo "GENERA info: CONCOCT binning activated" >> GENERA-Assembler.log
         """ 
@@ -544,6 +546,7 @@ process binning {
         find *.fa | cut -f1 -d"." > fa.list
         for f in `cat fa.list`; do cp \$f.fa CONCOCT_bin-\$f.fa; done
         mv CONCOCT_bin* ../../ 
+        cd ../../
         echo "GENERA info: Metabat and CONCOCT binning activated" >> GENERA-Assembler.log    
         """ 
     }
