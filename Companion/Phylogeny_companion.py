@@ -65,6 +65,47 @@ def main(main_file, mode):
                 two_out.write("\n")
             else:
                 two_out.write(str(progress) + " ")
+    
+    if (mode == 'IDM'):
+
+        #IDL part
+        infile = open(main_file)
+        idl_of = {}
+        for line in infile:
+            record = line.replace("\n", "")
+            if ('#' in record):
+                continue
+            else:
+                idl_of[record] = 1
+
+        #IDM part
+        infile = open('IDM')
+        temp_idm = open("idm.temp", "w")
+        temp_idm.write("#" + "\n")
+        temp_idm.write("#" + "\n")
+
+        for line in infile:
+            record = line.replace("\n", "")
+            if ('#' in record):
+                continue
+            else:
+                split_list = record.split("\t")
+                long = split_list[0]
+                short = split_list[1]
+                newshort = 'NA'
+                for id in idl_of:
+                    chunks = id.split("@")
+                    shortID = chunks[0]
+                    if (shortID == short):
+                        newshort = id
+                temp_idm.write(str(long) + "\t" + str(newshort) + "\n")
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     main()
