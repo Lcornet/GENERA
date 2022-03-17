@@ -595,6 +595,7 @@ process publicationResults {
     file 'jackk-third.tre' from jackktrethird_ch1
     file 'IDM' from idm_ch
     file "GENERA-Phylogeny.log" from log_ch7
+    val companion from params.companion
 
     output:
     file 'protML-final.tre' into protMLFINAL_ch
@@ -614,8 +615,13 @@ process publicationResults {
         if (params.jackk == 'yes') {
             """
             #Prot
-            cp IDM protML.idm; format-tree.pl protML.tre --map-ids; mv protML.tre protML-final.tre
-            cp IDM jackk.idm; format-tree.pl jackk.tre --map-ids; mv jackk.tre jackk-Prot-final.tre
+            #Large ML
+            tree2list.pl protML.tre
+            sed -i -e 's/ /_/g' protML.idl
+            $companion protML.idl --mode=IDM
+            cp idm.temp protML.idm; format-tree.pl protML.tre --map-ids; mv protML.tre protML-final.tre
+            #Jack
+            cp IDM jackk.idm; format-tree.pl jackk.tre --map-ids --from-consense; mv jackk.tre jackk-Prot-final.tre
             #False DNA
             echo "GENERA info: false file" > DNAclassic-final.tre
             echo "GENERA info: false file" > DNAtwo-final.tre
@@ -629,7 +635,12 @@ process publicationResults {
         else {
             """
             #Prot
-            cp IDM protML.idm; format-tree.pl protML.tre --map-ids; mv protML.tre protML-final.tre
+            #Large ML
+            tree2list.pl protML.tre
+            sed -i -e 's/ /_/g' protML.idl
+            $companion protML.idl --mode=IDM
+            cp idm.temp protML.idm; format-tree.pl protML.tre --map-ids; mv protML.tre protML-final.tre
+            #Jack
             mv jackk.tre jackk-final.tre           
             #False DNA
             echo "GENERA info: false file" > DNAclassic-final.tre
@@ -647,12 +658,23 @@ process publicationResults {
         if (params.jackk == 'yes') {
             """
             #DNA
-            cp IDM DNAclassic.idm; format-tree.pl DNAclassic.tre --map-ids; mv DNAclassic.tre DNAclassic-final.tre
-            cp IDM DNAtwo.idm; format-tree.pl DNAtwo.tre --map-ids; mv DNAtwo.tre DNAtwo-final.tre
-            cp IDM DNAthird.idm; format-tree.pl DNAthird.tre --map-ids; mv DNAthird.tre DNAthird-final.tre
-            cp IDM jackk.idm; format-tree.pl jackk.tre --map-ids; mv jackk.tre jackk-DNA-final.tre  
-            cp IDM jackk-two.idm; format-tree.pl jackk-two.tre --map-ids; mv jackk-two.tre jackk-DNAtwo-final.tre
-            cp IDM jackk-third.idm; format-tree.pl jackk-third.tre --map-ids; mv jackk-third.tre jackk-DNAthird-final.tre
+            #Large
+            tree2list.pl DNAclassic.tre
+            sed -i -e 's/ /_/g' DNAclassic.idl
+            $companion DNAclassic.idl --mode=IDM
+            cp idm.temp DNAclassic.idm; format-tree.pl DNAclassic.tre --map-ids; mv DNAclassic.tre DNAclassic-final.tre
+            tree2list.pl DNAtwo.tre
+            sed -i -e 's/ /_/g' DNAtwo.idl
+            $companion DNAtwo.idl --mode=IDM           
+            cp idm.temp DNAtwo.idm; format-tree.pl DNAtwo.tre --map-ids; mv DNAtwo.tre DNAtwo-final.tre
+            tree2list.pl DNAthird.tre
+            sed -i -e 's/ /_/g' DNAthird.idl
+            $companion DNAthird.idl --mode=IDM
+            cp idm.temp DNAthird.idm; format-tree.pl DNAthird.tre --map-ids; mv DNAthird.tre DNAthird-final.tre
+            #Jack
+            cp IDM jackk.idm; format-tree.pl jackk.tre --map-ids --from-consense; mv jackk.tre jackk-DNA-final.tre  
+            cp IDM jackk-two.idm; format-tree.pl jackk-two.tre --map-ids --from-consense; mv jackk-two.tre jackk-DNAtwo-final.tre
+            cp IDM jackk-third.idm; format-tree.pl jackk-third.tre --map-ids --from-consense; mv jackk-third.tre jackk-DNAthird-final.tre
             #False prot
             echo "GENERA info: false file" > protML-final.tre
             echo "GENERA info: false file" > jackk-Prot-final.tre        
@@ -661,10 +683,20 @@ process publicationResults {
         }
         else {
             """
-            #DNA
-            cp IDM DNAclassic.idm; format-tree.pl DNAclassic.tre --map-ids; mv DNAclassic.tre DNAclassic-final.tre
-            cp IDM DNAtwo.idm; format-tree.pl DNAtwo.tre --map-ids; mv DNAtwo.tre DNAtwo-final.tre
-            cp IDM DNAthird.idm; format-tree.pl DNAthird.tre --map-ids; mv DNAthird.tre DNAthird-final.tre
+            #Large
+            tree2list.pl DNAclassic.tre
+            sed -i -e 's/ /_/g' DNAclassic.idl
+            $companion DNAclassic.idl --mode=IDM
+            cp idm.temp DNAclassic.idm; format-tree.pl DNAclassic.tre --map-ids; mv DNAclassic.tre DNAclassic-final.tre
+            tree2list.pl DNAtwo.tre
+            sed -i -e 's/ /_/g' DNAtwo.idl
+            $companion DNAtwo.idl --mode=IDM           
+            cp idm.temp DNAtwo.idm; format-tree.pl DNAtwo.tre --map-ids; mv DNAtwo.tre DNAtwo-final.tre
+            tree2list.pl DNAthird.tre
+            sed -i -e 's/ /_/g' DNAthird.idl
+            $companion DNAthird.idl --mode=IDM
+            cp idm.temp DNAthird.idm; format-tree.pl DNAthird.tre --map-ids; mv DNAthird.tre DNAthird-final.tre
+            #Jack
             mv jackk.tre jackk-DNA-final.tre  
             mv jackk-two.tre jackk-DNAtwo-final.tre
             mv jackk-third.tre jackk-DNAthird-final.tre
