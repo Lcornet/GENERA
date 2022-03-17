@@ -60,6 +60,7 @@ def main(main_file, duplication, presence, duplicationpercent):
                         core_of[defline] += 1
                     else:
                         core_of[defline] = 1
+
         #compute stat for this OG
         dups = 0
         for defline in seen_of:
@@ -69,6 +70,7 @@ def main(main_file, duplication, presence, duplicationpercent):
         dups_percentage = (float(dups) / float(count)) * 100
         core = len(core_of)
         orgs_percentage = (float(core) / float(orgs_number)) * 100
+
         #print OG
         dupli = int(duplication)
         dupliPercent = float(duplicationpercent)
