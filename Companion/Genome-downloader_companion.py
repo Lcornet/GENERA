@@ -90,15 +90,18 @@ def main(main_file, mode, taxa, refgroup):
                 else: 
                     split_list = levels.split(";")
                     phylum = split_list[0]
-                    phylum = phylum.replace(" ", "")
+                    phylum = phylum.replace(" ", "", 1)
                     clas = split_list[1]
-                    clas = clas.replace(" ", "")
+                    clas = clas.replace(" ", "", 1)
                     order = split_list[2]
-                    order = order.replace(" ", "")
+                    order = order.replace(" ", "", 1)
                     family = split_list[3]
-                    family = family.replace(" ", "")
+                    family = family.replace(" ", "", 1)
                     genus = split_list[4]
-                    genus = genus.replace(" ", "")
+                    genus = genus.replace(" ", "", 1)
+                    species = split_list[5]
+                    species = species.replace(" ", "", 1)
+
 
                     if (taxa == 'phylum'):
                         group = phylum
@@ -118,6 +121,11 @@ def main(main_file, mode, taxa, refgroup):
                             GCFlist_of[GC] = 1
                     elif (taxa == 'genus'):
                         group = genus
+                        if (refgroup in group):
+                            GCFlist_of[GC] = 1
+                    elif (taxa == 'species'):
+                        group = species
+                        group = group.replace(" ", "_")
                         if (refgroup in group):
                             GCFlist_of[GC] = 1
                     
@@ -156,15 +164,17 @@ def main(main_file, mode, taxa, refgroup):
                 else: 
                     split_list = levels.split(";")
                     phylum = split_list[0]
-                    phylum = phylum.replace(" ", "")
+                    phylum = phylum.replace(" ", "", 1)
                     clas = split_list[1]
-                    clas = clas.replace(" ", "")
+                    clas = clas.replace(" ", "", 1)
                     order = split_list[2]
-                    order = order.replace(" ", "")
+                    order = order.replace(" ", "", 1)
                     family = split_list[3]
-                    family = family.replace(" ", "")
+                    family = family.replace(" ", "", 1)
                     genus = split_list[4]
-                    genus = genus.replace(" ", "")
+                    genus = genus.replace(" ", "", 1)
+                    species = split_list[5]
+                    species = species.replace(" ", "", 1)
 
                     if (taxa == 'phylum'):
                         group = phylum
@@ -186,6 +196,12 @@ def main(main_file, mode, taxa, refgroup):
                         group = genus
                         if ((refgroup in group) and (ID not in GCFlist_of)):
                             GCAlist_of[GC] = 1
+                    elif (taxa == 'species'):
+                        group = species
+                        group = group.replace(" ", "_")
+                        if ((refgroup in group) and (ID not in GCFlist_of)):
+                            GCAlist_of[GC] = 1
+                    
     
             #print GC list
             fetch_out = open("GCA.refgroup.uniq", "w")

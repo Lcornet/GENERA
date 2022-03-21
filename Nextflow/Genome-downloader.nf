@@ -29,11 +29,14 @@ def helpMessage() {
     
     Mandatory arguments:
     --group          Group of interest
-    --taxolevel      Taxonomic level of group - Choice between five taxa levels: phylum, class, order, family, genus           
+    --taxolevel      Taxonomic level of group - Choice between five taxa levels: phylum, class, order, family, genus, species          
 
     Optional arguments:
-    --taxdump 		    Path to taxdump directory - automatic setup by default
-    --genbank           Download GenBank metadata, activated by default - yes or no. Needed if refgenbank or outgenbank is activated
+    --taxdump 		        Path to taxdump directory - automatic setup by default
+    --genbank               Download GenBank metadata, activated by default - yes or no. Needed if refgenbank or outgenbank is activated
+    --dRep                  dRep dereplication for group of interest, not activated by default - yes or no
+    --ignoreGenomeQuality   don't run genome quality during dRep dereplication, yes or no, default = no
+    --cpu                   number of cpus to use, default = 1
     
     """.stripIndent()
     
@@ -60,7 +63,7 @@ if (params.group == null) {
 //Choice between four taxa levels for refgroup: phylum, class, order, family: Mandatory
 params.taxolevel = null
 if (params.taxolevel == null) {
-	exit 1, "Taxonomic levels: Choice between four taxa levels: phylum, class, order, family, genus "
+	exit 1, "Taxonomic levels: Choice between four taxa levels: phylum, class, order, family, genus, species "
 }
 
 //Path to companion
@@ -72,11 +75,19 @@ params.taxdump = 'local'
 //GenBank metadata activated by default
 params.genbank = 'yes'
 
+//ignoreGenomeQuality
+params.ignoreGenomeQuality = 'no'
+
+//Dereplications
+params.dRep = 'no'
 
 //Not specified by user
 //Path to project dir taxdump
 taxdir = "$workflow.projectDir" + '/taxdump'
 workingdir = file(taxdir)
+
+//cpu
+params.cpu = '1'
 
 //outdir
 params.outdir='Genome-downloader_output'
@@ -160,6 +171,7 @@ process RefSeq {
     output:
     file "ftp.sh" into refseq_ftp1
     file "GCF.tax" into refseq_tax1
+    file 'Genome-downloader.log' into log_ch1
 
     //script
     script:
@@ -168,7 +180,7 @@ process RefSeq {
     wget ftp://ftp.ncbi.nlm.nih.gov/genomes/refseq/assembly_summary_refseq.txt -O refseq_sum.txt
     $companion refseq_sum.txt --mode=sum
     grep -v "#" refseq_sum-filt.txt | cut -f1 > GCF.list
-    fetch-tax.pl GCF.list  --taxdir=\$(<taxdump_path.txt) --item-type=taxid --levels=phylum class order family genus
+    fetch-tax.pl GCF.list  --taxdir=\$(<taxdump_path.txt) --item-type=taxid --levels=phylum class order family genus species
     grep -v "#" refseq_sum-filt.txt | cut -f20 > ftp.list
     grep -v "#" refseq_sum-filt.txt | cut -f20 | cut -f10 -d"/" > names.list
     for f in `cat ftp.list `; do echo "/"; done > slash.list
@@ -179,6 +191,7 @@ process RefSeq {
     cut -f1,2 -d"_" names.list > id.list
     paste get.list ftp.list slash.list names.list end1.list out.list id.list end2.list > ftp.sh
     sed -i -e 's/\t//g' ftp.sh
+    echo "RefSeq metadata" >> Genome-downloader.log
     """
 }
 
@@ -191,10 +204,12 @@ process GenBank {
     input:
     file taxdump from taxdump_path2
     val companion from params.companion
+    file 'Genome-downloader.log' from log_ch1
     
     output:
     file "GCA-ftp.sh" into genbank_ftp1
     file "GCA.tax" into genbank_tax1
+    file 'Genome-downloader.log' into log_ch2
 
     //script
     script:
@@ -204,7 +219,7 @@ process GenBank {
         wget ftp://ftp.ncbi.nlm.nih.gov/genomes/genbank/assembly_summary_genbank.txt -O genbank_sum.txt
         $companion genbank_sum.txt --mode=sum
         grep -v "#" genbank_sum-filt.txt | cut -f1 > GCA.list
-        fetch-tax.pl GCA.list  --taxdir=\$(<taxdump_path.txt) --item-type=taxid --levels=phylum class order family genus
+        fetch-tax.pl GCA.list  --taxdir=\$(<taxdump_path.txt) --item-type=taxid --levels=phylum class order family genus species
         grep -v "#" genbank_sum-filt.txt | cut -f20 > ftp.list
         grep -v "#" genbank_sum-filt.txt | cut -f20 | cut -f10 -d"/" > names.list
         for f in `cat ftp.list `; do echo "/"; done > slash.list
@@ -215,6 +230,7 @@ process GenBank {
         cut -f1,2 -d"_" names.list > id.list
         paste get.list ftp.list slash.list names.list end1.list out.list id.list end2.list > GCA-ftp.sh
         sed -i -e 's/\t//g' GCA-ftp.sh
+         echo "Add GenBank metadata activated" >> Genome-downloader.log
         """
     }
     else {
@@ -222,6 +238,7 @@ process GenBank {
         """
         echo "Add GenBank Genomes NOT activated" > GCA.tax
         echo "Add GenBank Genomes NOT activated" > GCA-ftp.sh
+         echo "Add GenBank metadata NOT activated" >> Genome-downloader.log
         """
 
     }
@@ -240,11 +257,13 @@ process GetGenomesRefseq {
     val companion from params.companion
     file "ftp.sh" from refseq_ftp1
     file "GCF.tax" from refseq_tax1
+    file 'Genome-downloader.log' from log_ch2
     
     output:
     file '*-abbr.fna' into refgenomes_ch1
     file 'reduce-ftp.sh' into reduceRefFtp_ch
     file 'GCF.refgroup.uniq' into refgroupRefseqGC_ch
+    file 'Genome-downloader.log' into log_ch3
 
     //script
     script:
@@ -257,6 +276,7 @@ process GetGenomesRefseq {
     gunzip *.gz
     find *.fna | cut -f1,2 -d"." > fna.list
     for f in `cat fna.list`; do inst-abbr-ids.pl \$f*.fna --id-regex=:DEF --id-prefix=\$f; done
+    echo "Add RefSeq Genomes" >> Genome-downloader.log
     """
 }
 
@@ -273,10 +293,12 @@ process GetGenomesGenbank {
     file "GCA-ftp.sh" from genbank_ftp1
     file "GCA.tax" from genbank_tax1
     file 'GCF.refgroup.uniq' from refgroupRefseqGC_ch
+    file 'Genome-downloader.log' from log_ch3
     
     output:
     file '*-abbr.fna' into refgenomesGB_ch1
     file 'GCA-reduce-ftp.sh' into reduceRefFtpGB_ch
+    file 'Genome-downloader.log' into log_ch4
 
     //script
     script:
@@ -293,6 +315,7 @@ process GetGenomesGenbank {
         #for fix and proceed , false genbank files
         echo "Add GenBank Genomes activated" > FALSE-abbr.fna
         echo "Add GenBank Genomes activated" > FALSE-GCA-reduce-ftp.sh
+        echo "Add GenBank Genomes activated" >> Genome-downloader.log
         """
     }
     else {
@@ -300,6 +323,67 @@ process GetGenomesGenbank {
         """
         echo "Add GenBank Genomes NOT activated" > FALSE-abbr.fna
         echo "Add GenBank Genomes NOT activated" > GCA-reduce-ftp.sh
+        echo "Add GenBank Genomes NOT activated" >> Genome-downloader.log
+        """
+
+    }
+
+}
+
+//Dereplication with drep : OPTIONAL
+process Dereplication {
+
+    //informations
+
+	//input output
+    input:
+    file x from refgenomes_ch1
+    file x from refgenomesGB_ch1
+    val cpu from params.cpu
+    file 'Genome-downloader.log' from log_ch4
+    
+    output:
+    file 'DEREPLICATED' into drep_ch1
+    file 'Genome-downloader.log' into log_ch
+    file 'Genome-downloader.log' into log_ch5
+
+    //script
+    script:
+    if (params.dRep == 'yes'){
+        println "Genomes dereplication activated"
+        if (params.ignoreGenomeQuality == 'no') {
+            """
+            #Delete false Genbak files
+            rm -rf FALSE*
+            mkdir GEN
+            mv *.fna GEN/
+            dRep dereplicate DREP -g GEN/*.fna -p $cpu
+            mkdir DEREPLICATED/
+            mv DREP/dereplicated_genomes/*.fna DEREPLICATED/
+            echo "Drep Dereplication activated" >> Genome-downloader.log
+            """
+        }
+        else if (params.ignoreGenomeQuality == 'yes') {
+            """
+            #Delete false Genbak files
+            rm -rf FALSE*
+            mkdir GEN
+            mv *.fna GEN/
+            dRep dereplicate DREP -g GEN/*.fna -p $cpu --ignoreGenomeQuality
+            mkdir DEREPLICATED/
+            mv DREP/dereplicated_genomes/*.fna DEREPLICATED/
+            echo "Drep Dereplication activated" >> Genome-downloader.log
+            """
+        }
+    }
+    else {
+        println "Genomes dereplication not activated"
+        """
+        #Delete false Genbak files
+        rm -rf FALSE*
+        mkdir DEREPLICATED/
+        mv *.fna DEREPLICATED/
+        echo "Drep Dereplication not activated" >> Genome-downloader.log
         """
 
     }
@@ -313,28 +397,28 @@ process CombineGenomes {
 	//input output
     input:
     file taxdump from taxdump_path3
-    file x from refgenomes_ch1
-    file x from refgenomesGB_ch1
+    file 'DEREPLICATED' from drep_ch1
+    file 'Genome-downloader.log' from log_ch5
 
     output:
     file 'Genomes.taxomonomy' into taxonomy_ch
     file '*.fna' into genomes_ch
-    file 'Genome-downloader.log' into log_ch
+    file 'Genome-downloader.log' into logfinal_ch
 
     //script
     script:
 
     """
-    #Delete false Genbak files
-    rm -rf FALSE*
+    mv DEREPLICATED/*.fna .
     #log part
     echo "Genome-downloader started at `date`" > Genome-downloader.log
     echo "Genomes dowloaded: " >> Genome-downloader.log
     find *.fna | wc -l >> Genome-downloader.log
+    echo "Genome-downloader, version: " >> Genome-downloader.log
+    echo "2.0.0 " >> Genome-downloader.log
     #copy part
     find *.fna | cut -f1 -d'-' > GC.list
     fetch-tax.pl GC.list  --taxdir=\$(<taxdump_path.txt) --item-type=taxid --levels=phylum class order family genus species
     mv GC.tax Genomes.taxomonomy
-    for f in `cat GC.list`; do cp \$f-abbr.fna \$f-abbreviate.fna; done
     """
 }
