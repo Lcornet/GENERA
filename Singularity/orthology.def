@@ -1,10 +1,14 @@
 Bootstrap: yum
 OSVersion: 8
-MirrorURL: http://mirror.centos.org/centos-8/8/BaseOS/x86_64/os/
+MirrorURL: http://dl.rockylinux.org/pub/rocky/%{OSVERSION}/BaseOS/x86_64/os/
 Include: yum
 
 %files
     Orthology_companion.py /opt/
+    anvio-to-BMC.py /opt/
+    anvio_OGs-filtration.py /opt/
+    anvio_pan-to-OGs.py /opt/
+    confirm-OG.py /opt/
 
 %environment
     export PATH=/opt/usr/local/bin:$PATH

@@ -18,10 +18,11 @@ import glob
 @click.argument('main_file', type=click.Path(exists=True,readable=True))
 #taxid
 @click.option('--duplication', default='0')
+@click.option('--unwanted', default='0')
 @click.option('--duplicationpercent', default='200')
 @click.option('--presence', default='100')
 
-def main(main_file, duplication, presence, duplicationpercent):
+def main(main_file, duplication, presence, duplicationpercent, unwanted):
 
     #open list of organism
     orgs_of = {}
@@ -38,6 +39,7 @@ def main(main_file, duplication, presence, duplicationpercent):
     for OG in OG_list:
         #define
         count = 0
+        unwanted_number = 0
         core_of = {}
         seen_of = {}
 
@@ -60,6 +62,8 @@ def main(main_file, duplication, presence, duplicationpercent):
                         core_of[defline] += 1
                     else:
                         core_of[defline] = 1
+                else:
+                    unwanted_number += 1
 
         #compute stat for this OG
         dups = 0
@@ -78,10 +82,12 @@ def main(main_file, duplication, presence, duplicationpercent):
         
         if (orgs_percentage >= pres):
             #pass presence check
-            if (dups <= dupli):
-                #pass duplication absolute filter
-                if (dups_percentage <= dupliPercent):
-                    out_file.write( str(OG) + "\n")
+            if (unwanted_number <= int(unwanted)):
+                #less unwated or than desired
+                if (dups <= dupli):
+                    #pass duplication absolute filter
+                    if (dups_percentage <= dupliPercent):
+                        out_file.write( str(OG) + "\n")
 
 if __name__ == '__main__':
     main()

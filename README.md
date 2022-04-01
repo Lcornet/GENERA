@@ -9,6 +9,7 @@ Please visit
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
 # NEWS
+01/04 !!!  Orthology version 2.0.0 is now available: Specific gene analysis available, nucleotide mode available !!!  
 20/03 !!!  Genome-downloader version 2.0.0 is now available: Dereplication of genomes and species level are available !!!  
 10/02 !!!  OGs enrichment has been added to GENERA tools !!!  
 03/02 !!!  OGs DNA reverse translate has been added to GENERA tools !!!  
