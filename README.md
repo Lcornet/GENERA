@@ -1,4 +1,6 @@
 
+![pips](https://github.com/Lcornet/GENERA/blob/main/images/GENERA-pips.png)
+
 # BCCM GEN-ERA tools repository
 
 Please visit the wiki for tutorials and access to the tools:
