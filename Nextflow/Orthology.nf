@@ -106,7 +106,7 @@ params.specific = 'no'
 params.specificlist = 'none'
 
 //Path to COG
-params.COG = '/scratch/ulg/bioec/lcornet/SGC/COG'
+params.COG = '/scratch/ulg/GENERA/Databases/ANVIO/COG/'
 
 //outdir
 params.outdir='GENERA-Orthology'

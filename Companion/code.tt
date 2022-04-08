@@ -1,0 +1,13 @@
+library(ggplot2)
+infile <- read.delim("[% file %]-infile.txt", header=TRUE)
+write.csv(infile,"[% file %]-infile.csv", row.names = FALSE)
+list <- read.table("finallist", header=TRUE)
+write.csv(list,"[% file %]-list.csv", row.names = FALSE)
+orderlist = list$GENOME
+write.csv(orderlist,"[% file %]-orderlist.csv", row.names = FALSE)
+order <- transform(infile, GENOME = factor(GENOME, levels = orderlist))
+write.csv(order,"[% file %]-order.csv", row.names = FALSE)
+A <- ggplot(order, aes(KEGG, GENOME, fill= PRESENCE)) + geom_tile(color="white", size=0.1) + scale_fill_gradient(low="grey", high="black") + theme(panel.grid.major = element_blank()) + theme(legend.position="none") + ggtitle("[% file %]") + theme(axis.text.x = element_text(angle = 90, hjust=1,vjust=0.2)) + theme(axis.text = element_text(size = 6))
+pdf("[% file %].pdf")
+A
+dev.off()
