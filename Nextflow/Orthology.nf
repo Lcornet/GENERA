@@ -2,7 +2,7 @@
 
 /*
 ========================================================================================
-                         Specific Gene Content GENERA
+                         Orthology
 ========================================================================================
 GIT url : https://github.com/Lcornet/GENERA
 ----------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 2.0.0 
     
     Citation:
     Please cite : 
@@ -30,7 +30,7 @@ def helpMessage() {
     
     The typical command for running the pipeline is as follows:
 
-    nextflow run Specific_gene_content.nf --mode=inference --infiles=infiles --type=nucleotide \
+    nextflow run Orthology.nf --mode=inference --infiles=infiles --type=nucleotide \
     --core=yes --corelist=corelist --specific=yes --specificlist=specificlist --anvio=yes 
     
     Mandatory arguments:
@@ -230,6 +230,14 @@ process format {
             cd ../
             mkdir FORMAT
             mv FASTA/*abbr.faa FORMAT/
+            ##NEW
+            cd FORMAT/
+            find *.faa > abbr.list
+            sed -i -e 's/-abbr.faa//g' abbr.list
+            for f in `cat abbr.list`; do mv \$f-abbr.faa \$f.faa; done
+            cd ../
+            ##NEW
+
             echo "GENERA info: inference mode, format nucleotide names with BMC" >> GENERA-SGC.log
             """
         }
@@ -245,6 +253,13 @@ process format {
             cd ../
             mkdir FORMAT
             mv FASTA/*abbr.fna FORMAT/
+            ##NEW: For anvio run, reomve the -abbr
+            cd FORMAT/
+            find *.fna > abbr.list
+            sed -i -e 's/-abbr.fna//g' abbr.list
+            for f in `cat abbr.list`; do mv \$f-abbr.fna \$f.fna; done
+            cd ../
+            ##NEW
             echo "GENERA info: inference mode, format nucleotide names with BMC" >> GENERA-SGC.log
             """
         }
@@ -308,7 +323,6 @@ process prodigal {
         """
     }
 }
-
 
 //Orthology inference
 process orthofinder {
@@ -471,7 +485,7 @@ process formatOG {
             #BMC OGs
             cut -f2 external-genomes.txt > f1
             sed -i -e 's/contigs_db_path/#/g' f1
-            sed -i -e 's/-abbr.db//g' f1
+            sed -i -e 's/.db//g' f1
             cut -f1 external-genomes.txt > f2
             sed -i -e 's/name/#/g' f2
             paste f1 f2 > IDM
@@ -800,10 +814,11 @@ process enrichment {
         #Part for org to add
         mkdir org-to-add
         cd PSEQS/
-        find *.faa | cut -f1 -d"-" > abbr.list
+        find *.faa > abbr.list
+        sed -i -e 's/.faa//g' abbr.list
         cd ../
         cp PSEQS/abbr.list .
-        for f in `cat abbr.list`; do cp PSEQS/\$f-abbr.faa org-to-add/\$f.faa; done
+        for f in `cat abbr.list`; do cp PSEQS/\$f.faa org-to-add/\$f.faa; done
         cd org-to-add/
         find *.faa > list
         sed -i -e 's/.faa//g' list
