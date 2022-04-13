@@ -11,6 +11,7 @@ Please visit
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
 # NEWS
+13/04 !!!  Average Nucleotide Identity has been added to GENERA tools !!!
 12/04 !!!  GTDB has been added to GENERA tools !!!  
 08/04 !!!  Metabolic has been added to GENERA tools !!!  
 01/04 !!!  Orthology version 2.0.0 is now available: Specific gene analysis available, nucleotide mode available !!!  

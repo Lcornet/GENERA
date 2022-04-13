@@ -1,0 +1,15 @@
+library(ggplot2)
+infile <- read.delim("[% file %]-infile.txt", header=TRUE)
+write.csv(infile,"[% file %]-infile.csv", row.names = FALSE)
+list <- read.table("finallist", header=TRUE)
+write.csv(list,"[% file %]-list.csv", row.names = FALSE)
+orderlist = list$GENOME
+write.csv(orderlist,"[% file %]-orderlist.csv", row.names = FALSE)
+order <- transform(infile, GENOME1 = factor(GENOME1, levels = rev(orderlist)))
+write.csv(order,"[% file %]-order.csv", row.names = FALSE)
+pals <- c("#e0966e","#e06e6e","#d10404","#570101","#2b0000","#1c0000","#000000")
+brk<- c(80,84,89,92,94,97,99)
+A <- ggplot(order, aes(GENOME2, GENOME1, fill= ANI)) + geom_tile(color="white", size=0.1) + scale_fill_gradientn(name="ANI", colours=pals,breaks = brk, na.value = "grey90")  + theme(legend.position="right") + ggtitle("fastANI") + theme(axis.text.x = element_text(angle = 90, hjust=1,vjust=0.2)) + theme(axis.text = element_text(size = 6)) +labs(y= "GENOMES", x = "GENOMES")
+pdf("[% file %].pdf")
+A
+dev.off()

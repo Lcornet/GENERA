@@ -1,0 +1,71 @@
+BootStrap: debootstrap
+OSVersion: focal
+MirrorURL: http://us.archive.ubuntu.com/ubuntu/
+
+%files
+    ANI_companion.py /opt/
+    code-ANI.tt /opt/
+
+%environment
+    export PATH=/opt/usr/local/bin:$PATH
+    export PATH=/opt/miniconda/bin:$PATH
+    . /opt/miniconda/etc/profile.d/conda.sh
+
+%post
+    # Ubuntu
+
+    ## permissions
+    chmod -R 777 /opt           # chmod775 can be enough
+    chmod -R 777 /root          # chmod775 can be enough
+
+    ## update repository for apt
+    apt install -y software-properties-common
+    apt-add-repository universe
+    apt update
+
+    ## UFT8
+    apt install -y locales
+    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+
+    #basic
+    apt install git -y
+    apt install python3.8 -y
+    apt-get install python3-pip -y
+    apt-get install wget -y
+    apt-get install unzip -y
+    apt-get install rsync -y
+    apt install cpanminus -y
+    apt-get install libssl-dev -y
+    apt-get install pdftk -y
+
+    #instal conda
+    cd /opt/
+    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
+    export PATH=/opt/miniconda/bin:$PATH
+    #conda install -c bioconda python=3.7 -y
+    #conda install -c bioconda mantis_pfa -y
+
+    #R
+    apt install r-base -y
+    apt-get install -y r-cran-ggplot2 -y
+    R -e 'install.packages(c("ggplot2"))'
+
+    #tpage
+    apt-get install libtemplate-perl -y
+
+    #companion
+    cd /opt/
+    mkdir companion
+    pip3 install click
+    mv ANI_companion.py companion/ 
+
+%runscript
+    echo "This container contains : "
+
+%help
+    This is a container for contamination detection
+ 
+%labels
+    Author Luc Cornet
+    Version v0.0.1
