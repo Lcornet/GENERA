@@ -201,7 +201,7 @@ process shortreadsassembly {
     else if (params.metagenome == 'yes'){
     println "GENERA info: metagenome for short reads activated, Assembly will be done with SPAdes"
         """
-        spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R1-fastp.fastq` --meta -t $cpu -m $ram -o SPADES
+        spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R2-fastp.fastq` --meta -t $cpu -m $ram -o SPADES
         cp SPADES/scaffolds.fasta SPADES_scaffolds.fasta
         echo "GENERA info: metagenome for short reads activated, Assembly will be done with SPAdes" >> GENERA-Assembler.log
         """
@@ -209,7 +209,7 @@ process shortreadsassembly {
     else{
     println "GENERA info: Assembly will be done with SPAdes"
         """
-        spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R1-fastp.fastq` -t $cpu -m $ram -o SPADES
+        spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R2-fastp.fastq` -t $cpu -m $ram -o SPADES
         cp SPADES/scaffolds.fasta SPADES_scaffolds.fasta
         echo "GENERA info: Assembly will be done with SPAdes" >> GENERA-Assembler.log
         """  
