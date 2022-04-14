@@ -230,14 +230,12 @@ process format {
             cd ../
             mkdir FORMAT
             mv FASTA/*abbr.faa FORMAT/
-            ##NEW
+            #as for anvio, delete the -abbr
             cd FORMAT/
             find *.faa > abbr.list
             sed -i -e 's/-abbr.faa//g' abbr.list
             for f in `cat abbr.list`; do mv \$f-abbr.faa \$f.faa; done
             cd ../
-            ##NEW
-
             echo "GENERA info: inference mode, format nucleotide names with BMC" >> GENERA-SGC.log
             """
         }
@@ -253,13 +251,12 @@ process format {
             cd ../
             mkdir FORMAT
             mv FASTA/*abbr.fna FORMAT/
-            ##NEW: For anvio run, reomve the -abbr
+            # For anvio run, reomve the -abbr
             cd FORMAT/
             find *.fna > abbr.list
             sed -i -e 's/-abbr.fna//g' abbr.list
             for f in `cat abbr.list`; do mv \$f-abbr.fna \$f.fna; done
             cd ../
-            ##NEW
             echo "GENERA info: inference mode, format nucleotide names with BMC" >> GENERA-SGC.log
             """
         }
@@ -308,6 +305,10 @@ process prodigal {
             sed -i -e 's/.fna//g' list
             for f in `cat list`; do prodigal -i \$f.fna -o \$f.genes -d \$f.genes.fna -a \$f.faa; done
             rm -rf *genes*
+            #abbr the file and delete the -abbr in the file nams
+            for f in `cat list`; do inst-abbr-ids.pl \$f.faa --id-regex=:DEF; done
+            for f in `cat list`; do mv \$f-abbr.faa \$f.faa; done
+            sed -i -e 's/>|/>/g' *.faa
             cd ../
             mv FORMAT/*.faa PSEQS/
             echo "GENERA info: nucleotide mode, run prodigal" >> GENERA-SGC.log
