@@ -36,6 +36,7 @@ def helpMessage() {
     --genbank               Download GenBank metadata, activated by default - yes or no. Needed if refgenbank or outgenbank is activated
     --dRep                  dRep dereplication for group of interest, not activated by default - yes or no
     --ignoreGenomeQuality   don't run genome quality during dRep dereplication, yes or no, default = no
+    --abbr                  Abreviate the deflines of the genomes, yes or no, default = no
     --cpu                   number of cpus to use, default = 1
     
     """.stripIndent()
@@ -80,6 +81,9 @@ params.ignoreGenomeQuality = 'no'
 
 //Dereplications
 params.dRep = 'no'
+
+//abbr
+params.abbr = 'no'
 
 //Not specified by user
 //Path to project dir taxdump
@@ -260,24 +264,36 @@ process GetGenomesRefseq {
     file 'Genome-downloader.log' from log_ch2
     
     output:
-    file '*-abbr.fna' into refgenomes_ch1
+    //file '*-abbr.fna' into refgenomes_ch1
+    file '*.fna' into refgenomes_ch1
     file 'reduce-ftp.sh' into reduceRefFtp_ch
     file 'GCF.refgroup.uniq' into refgroupRefseqGC_ch
     file 'Genome-downloader.log' into log_ch3
 
     //script
     script:
-
-    """
-    #Produce list of GCF IDs with reference group and taxa levels
-    $companion GCF.tax --mode=fetch --taxa=$taxa --refgroup=$group
-    for f in `cat GCF.refgroup.uniq`; do grep \$f ftp.sh; done > reduce-ftp.sh
-    bash reduce-ftp.sh
-    gunzip *.gz
-    find *.fna | cut -f1,2 -d"." > fna.list
-    for f in `cat fna.list`; do inst-abbr-ids.pl \$f*.fna --id-regex=:DEF --id-prefix=\$f; done
-    echo "Add RefSeq Genomes" >> Genome-downloader.log
-    """
+    if (params.abbr == 'yes'){
+        """
+        #Produce list of GCF IDs with reference group and taxa levels
+        $companion GCF.tax --mode=fetch --taxa=$taxa --refgroup=$group
+        for f in `cat GCF.refgroup.uniq`; do grep \$f ftp.sh; done > reduce-ftp.sh
+        bash reduce-ftp.sh
+        gunzip *.gz
+        find *.fna | cut -f1,2 -d"." > fna.list
+        for f in `cat fna.list`; do inst-abbr-ids.pl \$f*.fna --id-regex=:DEF --id-prefix=\$f; done
+        echo "Add RefSeq Genomes, abbr mode" >> Genome-downloader.log
+        """
+    }
+    else if (params.abbr == 'no'){
+        """
+        #Produce list of GCF IDs with reference group and taxa levels
+        $companion GCF.tax --mode=fetch --taxa=$taxa --refgroup=$group
+        for f in `cat GCF.refgroup.uniq`; do grep \$f ftp.sh; done > reduce-ftp.sh
+        bash reduce-ftp.sh
+        gunzip *.gz
+        echo "Add RefSeq Genomes, non abbr mode" >> Genome-downloader.log
+        """
+    }
 }
 
 //Get GenBank genome for the reference group, abbr files: OPTIONAL
@@ -296,27 +312,43 @@ process GetGenomesGenbank {
     file 'Genome-downloader.log' from log_ch3
     
     output:
-    file '*-abbr.fna' into refgenomesGB_ch1
+    file '*.fna' into refgenomesGB_ch1
     file 'GCA-reduce-ftp.sh' into reduceRefFtpGB_ch
     file 'Genome-downloader.log' into log_ch4
 
     //script
     script:
     if (params.genbank == 'yes'){
+        if (params.abbr == 'yes'){
         println "Add GenBank Genomes activated"
-        """
-        #Produce list of GCA IDs with reference group and taxa levels
-        $companion GCA.tax --mode=fetch --taxa=$taxa --refgroup=$group
-        for f in `cat GCA.refgroup.uniq`; do grep \$f GCA-ftp.sh; done > GCA-reduce-ftp.sh
-        bash GCA-reduce-ftp.sh
-        gunzip *.gz
-        find *.fna | cut -f1,2 -d"." > fna.list
-        for f in `cat fna.list`; do inst-abbr-ids.pl \$f*.fna --id-regex=:DEF --id-prefix=\$f; done
-        #for fix and proceed , false genbank files
-        echo "Add GenBank Genomes activated" > FALSE-abbr.fna
-        echo "Add GenBank Genomes activated" > FALSE-GCA-reduce-ftp.sh
-        echo "Add GenBank Genomes activated" >> Genome-downloader.log
-        """
+            """
+            #Produce list of GCA IDs with reference group and taxa levels
+            $companion GCA.tax --mode=fetch --taxa=$taxa --refgroup=$group
+            for f in `cat GCA.refgroup.uniq`; do grep \$f GCA-ftp.sh; done > GCA-reduce-ftp.sh
+            bash GCA-reduce-ftp.sh
+            gunzip *.gz
+            find *.fna | cut -f1,2 -d"." > fna.list
+            for f in `cat fna.list`; do inst-abbr-ids.pl \$f*.fna --id-regex=:DEF --id-prefix=\$f; done
+            #for fix and proceed , false genbank files
+            echo "Add GenBank Genomes activated" > FALSE-abbr.fna
+            echo "Add GenBank Genomes activated" > FALSE-GCA-reduce-ftp.sh
+            echo "Add GenBank Genomes activated, abbr mode" >> Genome-downloader.log
+            """
+        }
+        else if (params.abbr == 'no'){
+        println "Add GenBank Genomes activated"
+            """
+            #Produce list of GCA IDs with reference group and taxa levels
+            $companion GCA.tax --mode=fetch --taxa=$taxa --refgroup=$group
+            for f in `cat GCA.refgroup.uniq`; do grep \$f GCA-ftp.sh; done > GCA-reduce-ftp.sh
+            bash GCA-reduce-ftp.sh
+            gunzip *.gz
+            #for fix and proceed , false genbank files
+            echo "Add GenBank Genomes activated" > FALSE-abbr.fna
+            echo "Add GenBank Genomes activated" > FALSE-GCA-reduce-ftp.sh
+            echo "Add GenBank Genomes activated, non abbr mode" >> Genome-downloader.log
+            """
+        }
     }
     else {
         println "Add GenBank Genomes NOT activated"
@@ -415,9 +447,11 @@ process CombineGenomes {
     echo "Genomes dowloaded: " >> Genome-downloader.log
     find *.fna | wc -l >> Genome-downloader.log
     echo "Genome-downloader, version: " >> Genome-downloader.log
-    echo "2.0.0 " >> Genome-downloader.log
+    echo "2.0.1 " >> Genome-downloader.log
     #copy part
-    find *.fna | cut -f1 -d'-' > GC.list
+    #find *.fna | cut -f1 -d'-' > GC.list
+    find *.fna  > GC.list
+    sed -i -e 's/.fna//g' GC.list
     fetch-tax.pl GC.list  --taxdir=\$(<taxdump_path.txt) --item-type=taxid --levels=phylum class order family genus species
     mv GC.tax Genomes.taxomonomy
     """
