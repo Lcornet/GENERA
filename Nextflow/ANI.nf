@@ -115,12 +115,12 @@ process heatmap {
     input:
     file 'ANI.txt' from file_ch1
     file 'list' from list_ch
-    file 'ANI-matrix.txt' into matrice_ch
     val companion from params.companion
 
     output:
     file 'ANI.pdf' into pdf_ch
     file 'ANI-close' into close_ch
+    file 'ANI-matrix.txt' into matrice_ch
 
     //script
     script:
