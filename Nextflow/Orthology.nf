@@ -129,9 +129,10 @@ params.anvioOGsfiltration = '/opt/anvio_OGs-filtration.py'
 params.anviotoBMC = '/opt/anvio-to-BMC.py'
 params.confirmog = '/opt/confirm-OG.py'
 params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
+params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.0'
+params.version = '2.0.1'
 
 /*
 CORE PROGRAM
@@ -208,6 +209,7 @@ process format {
 	//input output
     input:
     file '*' from infiles_ch
+    val changespadesids from params.changespadesids
 
     output:
     file 'FORMAT' into seqs_ch1
@@ -242,8 +244,16 @@ process format {
         else if (params.type == 'nucleotide') {
             println "GENERA info: inference mode, format nucleotide names with BMC"
             """
+            mkdir CHANGE
+            cp infiles/*.fna CHANGE/
+            cd CHANGE/
+            find *.fna > fna.list
+            sed -i -e 's/.fna//g' fna.list
+            $changespadesids
+            for f in `cat fna.list`; do mv \$f-spades.fna \$f.fna; done
+            cd ../
             mkdir FASTA
-            cp infiles/*.fna FASTA/
+            mv CHANGE/*.fna FASTA/
             cd FASTA
             find *.fna > fna.list
             sed -i -e 's/.fna//g' fna.list

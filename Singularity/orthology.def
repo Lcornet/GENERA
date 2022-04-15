@@ -9,6 +9,7 @@ Include: yum
     anvio_OGs-filtration.py /opt/
     anvio_pan-to-OGs.py /opt/
     confirm-OG.py /opt/
+    change-spades-IDs.py /opt/
 
 %environment
     export PATH=/opt/usr/local/bin:$PATH
