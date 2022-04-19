@@ -1,0 +1,197 @@
+BootStrap: debootstrap
+OSVersion: focal
+MirrorURL: http://us.archive.ubuntu.com/ubuntu/
+
+%files
+    Contams_companion.py /opt/
+    contam-labels.idl /opt/
+    chimeric_companion.py /opt/
+    kraken-parser.pl /opt/
+    create-labeler.pl /opt/
+
+%environment
+    export PATH=/opt/usr/local/bin:$PATH
+    export PATH=/opt/miniconda/bin:$PATH
+    export PATH=/opt/KRAKEN:$PATH
+    export PATH=/opt/diamond:$PATH
+    export PATH=/opt/Prodigal:$PATH
+    export PATH=/opt/exonerate-2.2.0-x86_64/bin:$PATH
+    export PATH=/opt/jellyfish-2.2.10/bin:$PATH
+    export PATH=/opt/Prodigal:$PATH
+    export PATH=/opt/pplacer-Linux-v1.1.alpha17:$PATH
+    export PATH=/opt/metaeuk/bin:$PATH
+    export PATH=/opt/OrthoFinder_source:$PATH
+
+%post
+    # Ubuntu
+
+    ## permissions
+    chmod -R 777 /opt           # chmod775 can be enough
+    chmod -R 777 /root          # chmod775 can be enough
+
+    ## update repository for apt
+    apt install -y software-properties-common
+    apt-add-repository universe
+    apt update
+
+    ## UFT8
+    apt install -y locales
+    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+
+    #basic
+    apt install git -y
+    apt install python3.8 -y
+    apt-get install python3-pip -y
+    apt-get install wget -y
+    apt-get install unzip -y
+    apt-get install rsync -y
+    apt install cpanminus -y
+    apt-get install libssl-dev -y
+
+    #instal conda
+    cd /opt/
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
+    export PATH=/opt/miniconda/bin:$PATH
+    conda install -c bioconda python=3.7 -y
+
+    #capnm module + BMC
+    cpanm LWP::Simple
+    cpanm aliased
+    cpanm Modern::Perl
+    cpanm Bio::MUST::Core
+    cpanm Bio::MUST::Drivers
+    cpanm Bio::MUST::Apps::FortyTwo
+    cpanm Bio::MUST::Apps::Physeter
+
+    #GUNC
+    pip3 install gunc
+
+    #Kraken2
+    cd /opt/
+    git clone https://github.com/DerrickWood/kraken2
+    cd kraken2/
+    ./install_kraken2.sh /opt/KRAKEN
+    export PATH=/opt/KRAKEN:$PATH
+
+    #Blast
+    apt-get install ncbi-blast+ -y
+
+    #Exonerate
+    cd /opt/
+    wget http://ftp.ebi.ac.uk/pub/software/vertebrategenomics/exonerate/exonerate-2.2.0-x86_64.tar.gz
+    tar -xzf exonerate-2.2.0-x86_64.tar.gz
+    export PATH=/opt/exonerate-2.2.0-x86_64/bin:$PATH
+
+    #jellyfish
+    cd /opt/
+    wget https://github.com/gmarcais/Jellyfish/releases/download/v2.2.10/jellyfish-2.2.10.tar.gz
+    tar -xzf jellyfish-2.2.10.tar.gz
+    cd jellyfish-2.2.10
+    ./configure && make && make install
+    export PATH=/opt/jellyfish-2.2.10/bin:$PATH
+
+    #checkm deps
+    apt-get install -y hmmer
+    cd /opt/
+    wget https://github.com/matsen/pplacer/releases/download/v1.1.alpha17/pplacer-Linux-v1.1.alpha17.zip
+    unzip pplacer-Linux-v1.1.alpha17.zip
+    export PATH=/opt/pplacer-Linux-v1.1.alpha17:$PATH
+    #Prodigal
+    cd /opt
+    git clone https://github.com/hyattpd/Prodigal
+    cd Prodigal/
+    make install
+    export PATH=/opt/Prodigal:$PATH
+
+    #Diamond
+    cd /opt/
+    mkdir diamond
+    cd diamond/
+    wget http://github.com/bbuchfink/diamond/releases/download/v2.0.4/diamond-linux64.tar.gz
+    tar xzf diamond-linux64.tar.gz
+    export PATH=/opt/diamond:$PATH
+
+    #checkm
+    cd /opt/
+    pip3 install numpy
+    pip3 install Pillow
+    pip3 install matplotlib
+    pip3 install pysam
+    pip3 install checkm-genome
+    mkdir checkm-data
+    cd checkm-data/
+    wget https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz
+    tar -xzf checkm_data_2015_01_16.tar.gz
+    cd ../
+    checkm data setRoot checkm-data/
+
+    #busco
+    apt install default-jre -y
+    pip3 install biopython
+    pip3 install pandas
+    apt install augustus augustus-data augustus-doc -y
+    #metaeuk
+    cd /opt/
+    wget https://mmseqs.com/metaeuk/metaeuk-linux-avx2.tar.gz
+    tar xzvf metaeuk-linux-avx2.tar.gz
+    export PATH=/opt/metaeuk/bin:$PATH
+    #R
+    apt install r-base -y
+    apt-get install -y r-cran-ggplot2 -y
+    #sepp
+    ln -s /usr/bin/python3 /usr/bin/python
+    cd /opt/
+    git clone https://github.com/smirarab/sepp/
+    cd sepp/
+    python setup.py config
+    python setup.py install
+    #Busco
+    cd /opt/
+    git clone https://gitlab.com/ezlab/busco.git
+    cd busco/
+    python3 setup.py install
+
+    #quast
+    apt-get install -y pkg-config libfreetype6-dev libpng-dev python3-matplotlib
+    cd /opt/
+    git clone https://github.com/ablab/quast
+    cd quast/
+    ./setup.py install
+
+    #Orthofinder
+    cd /opt/
+    pip3 install numpy
+    pip3 install scipy
+    wget https://github.com/davidemms/OrthoFinder/releases/download/2.5.4/OrthoFinder_source.tar.gz
+    tar -xzf OrthoFinder_source.tar.gz
+    cd /opt/OrthoFinder_source
+    chmod a+x orthofinder.py
+
+    #plasimid picker
+    cd /opt/
+    git clone https://github.com/haradama/PlasmidPicker.git
+    cd PlasmidPicker
+    pip install -r requirements.txt
+    python setup.py install
+
+    #companion conta
+    cd /opt/
+    mkdir companion
+    mv Contams_companion.py companion/
+    mv contam-labels.idl companion/
+    pip3 install Click
+    #companion chime
+    cd /opt/
+    mv chimeric_companion.py companion/
+
+%runscript
+    echo "This container contains : "
+    CheckM
+
+%help
+    This is a container for contamination detection
+ 
+%labels
+    Author Luc Cornet
+    Version v0.0.1
