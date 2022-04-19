@@ -11,6 +11,7 @@ Please visit
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
 # NEWS
+19/04 !!!  Single locus Maximum Likelihood Phylogeny has been added to GENERA tools !!!
 14/04 !!!  Genome-downloader version 2.0.1 is now available: abbr mode is now optional !!!  
 13/04 !!!  Average Nucleotide Identity has been added to GENERA tools !!!
 12/04 !!!  GTDB has been added to GENERA tools !!!  
