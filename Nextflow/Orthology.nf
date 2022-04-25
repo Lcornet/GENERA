@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.0 
+    Version: 2.0.2 
     
     Citation:
     Please cite : 
@@ -47,6 +47,7 @@ def helpMessage() {
     --specific              Extract specific gene. Default = no.
                             A list of organism is required with this options.
     --specificlist          Path to a list of organism to consider for specific genes.
+    --progigalProcedure     Select procedure of prodigal, meta or single, default = single
     --taxdump 		         Path to taxdump directory - automatic setup by default
     --cpu                   Number of cpu to use. Default = 1.  
     --COG                   Path to COG as setup by anvio, default = none                                  
@@ -105,6 +106,9 @@ params.specific = 'no'
 //Path to list
 params.specificlist = 'none'
 
+//progigalProcedure
+params.progigalProcedure = 'single'
+
 //Path to COG
 params.COG = '/scratch/ulg/GENERA/Databases/ANVIO/COG/'
 
@@ -132,7 +136,7 @@ params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
 params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.1'
+params.version = '2.0.2'
 
 /*
 CORE PROGRAM
@@ -289,6 +293,7 @@ process prodigal {
     input:
     file 'FORMAT' from seqs_ch1
     file "GENERA-SGC.log" from log_ch1
+    val progigalProcedure from params.progigalProcedure
 
     output:
     file 'PSEQS' into prot_ch1
@@ -313,7 +318,7 @@ process prodigal {
             cd FORMAT/
             find *.fna > list
             sed -i -e 's/.fna//g' list
-            for f in `cat list`; do prodigal -i \$f.fna -o \$f.genes -d \$f.genes.fna -a \$f.faa; done
+            for f in `cat list`; do prodigal -i \$f.fna -o \$f.genes -d \$f.genes.fna -a \$f.faa -p $progigalProcedure; done
             rm -rf *genes*
             #abbr the file and delete the -abbr in the file nams
             for f in `cat list`; do inst-abbr-ids.pl \$f.faa --id-regex=:DEF; done
