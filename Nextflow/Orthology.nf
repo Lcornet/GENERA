@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.2 
+    Version: 2.0.3 
     
     Citation:
     Please cite : 
@@ -136,7 +136,7 @@ params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
 params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.2'
+params.version = '2.0.3'
 
 /*
 CORE PROGRAM
@@ -648,6 +648,7 @@ process core {
         println "GENERA info: core gene option not activated"
         """
         mkdir CORE
+        echo "GENERA info: core gene option not activate" > core-OG.list
         echo "GENERA info: core gene option not activated" >> CORE/info
         echo "GENERA info: core gene option not activated" >> GENERA-SGC.log  
         """
@@ -676,7 +677,7 @@ process specific {
 
     //script
     script:
-    if (params.core == 'yes') {
+    if (params.specific == 'yes') {
         if (params.anvio == 'yes') {
             if (params.mode == 'inference') {
                 println "GENERA info: specific gene from anvio files"
@@ -779,8 +780,13 @@ process specific {
         println "GENERA info: core gene option not activated"
         """
         mkdir CANDIDATEspec
+        mkdir ANVIO-files
+        mkdir OG-BMC
+        mv ORTHO/*.fa OG-BMC/
         echo "GENERA info: specific gene option not activated" > filtered-OG.list
         echo "GENERA info: specific gene option not activated" >> CANDIDATEspec/info
+        echo "GENERA info: specific gene option not activated" >> ANVIO-files/info
+        echo "GENERA info: specific gene option not activated" >> OG-BMC/info
         echo "GENERA info: specific gene option not activated" >> GENERA-SGC.log  
         """
     }
