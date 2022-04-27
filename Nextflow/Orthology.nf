@@ -923,8 +923,9 @@ process enrichmentcheck {
     else {
         println "GENERA info: running specific enrichment ckeck not activated"
         """
-        mkdir ENRICHED
-        echo "GENERA info: specific enrichment check not activated" >> ENRICHED/info
+        mkdir SPECIFIC
+        echo "GENERA info: specific enrichment check not activated" >> verified-specific.list
+        echo "GENERA info: specific enrichment check not activated" >> SPECIFIC/info
         echo "GENERA info: specific enrichment check not activated" >> GENERA-SGC.log
         """
     }
