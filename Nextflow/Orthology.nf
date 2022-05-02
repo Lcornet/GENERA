@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.3 
+    Version: 2.0.4 
     
     Citation:
     Please cite : 
@@ -136,7 +136,7 @@ params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
 params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.3'
+params.version = '2.0.4'
 
 /*
 CORE PROGRAM
@@ -592,7 +592,7 @@ process core {
                 #Anvio don't keep word after points, do the same thing in the list
                 cut -f1 -d"." list > corelist
                 cd OG-anvio/
-                rm -rf *BMV*
+                rm -rf *BMC*
                 $anvioOGsfiltration ../corelist --pfilter=yes --fraction=1 --unwanted=0 --cfilter=yes --maxcopy=1 \
                 --hfilter=yes --hindex=homogeneity.txt --maxfunctionalindex=0.8 --maxgeometricindex=0.8 \
                 --cogtable=PAN_gene_clusters_summary.txt
@@ -782,7 +782,7 @@ process specific {
         mkdir CANDIDATEspec
         mkdir ANVIO-files
         mkdir OG-BMC
-        mv ORTHO/*.fa OG-BMC/
+        mv ORTHO/*BMC_OG.fasta OG-BMC/
         echo "GENERA info: specific gene option not activated" > filtered-OG.list
         echo "GENERA info: specific gene option not activated" >> CANDIDATEspec/info
         echo "GENERA info: specific gene option not activated" >> ANVIO-files/info
