@@ -75,6 +75,7 @@ def main(main_file, mode, pfilter, fraction, unwanted, cfilter, maxcopy, hfilter
                     if ((org in orgs_of) and (org not in counted_orgs)): #Counte only one time an organism
                         orgCount += 1
                         counted_orgs.append(org)
+                        seen_orgs.append(org)
                     else:
                         if (org not in seen_orgs):
                             unwantedorgCount += 1
