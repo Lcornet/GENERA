@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 1.0.1 
     
     Citation:
     Please cite : 
@@ -38,6 +38,7 @@ def helpMessage() {
 
     Optional arguments:
     --mode                  specify prot or DNA, default = prot
+    --align                 activate the alignment for protein, yes or no, default = no
     --jackk                 activate jackknife, default = no
     --rep                   number of jackkninfe replicates
     --width                 Width of jackknife replicates
@@ -73,6 +74,9 @@ if (params.IDM == null) {
 //mode
 params.mode = 'prot'
 
+//align
+params.align = 'no'
+
 //jaccknife
 params.jackk = 'no'
 
@@ -92,7 +96,7 @@ params.cpu = '1'
 params.companion = '/opt/companion/Phylogeny_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '1.0.1'
 
 /*
 CORE PROGRAM
@@ -164,14 +168,25 @@ process alignment {
     script:
     println "GENERA info: run alignment"
     if (params.mode == 'prot') {
-        """
-        mkdir aligned
-        mkdir OGs
-        find *.faa | cut -f1 -d"." > list
-        mv *.faa OGs/
-        for f in `cat list`; do muscle3.8.31_i86linux64 -in OGs/\$f.faa -out aligned/\$f.faa; done
-        echo "GENERA info: run prot alignment" >> GENERA-Phylogeny.log
-        """
+        if (params.align == 'yes') {
+            """
+            mkdir aligned
+            mkdir OGs
+            find *.faa | cut -f1 -d"." > list
+            mv *.faa OGs/
+            for f in `cat list`; do muscle3.8.31_i86linux64 -in OGs/\$f.faa -out aligned/\$f.faa; done
+            echo "GENERA info: run prot alignment" >> GENERA-Phylogeny.log
+            """
+        }
+        else if (params.align == 'no') {
+            """
+            mkdir aligned
+            mkdir OGs
+            find *.faa | cut -f1 -d"." > list
+            mv *.faa aligned/
+            echo "GENERA info:  No prot alignment" >> GENERA-Phylogeny.log
+            """
+        }
     }
     else if (params.mode == 'DNA') {
         """
