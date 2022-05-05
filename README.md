@@ -11,6 +11,7 @@ Please visit
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
 # NEWS
+05/05 !!!  The Training is available online: https://www.youtube.com/watch?v=bfqSl9Mi8eA !!!  
 03/05 !!!  Genome-downloader version 3.0.0 is now available: donwload of proteomes + genomes !!!    
 19/04 !!!  Genomic contamination estimation has been added to GENERA tools !!!  
 19/04 !!!  Single locus Maximum Likelihood Phylogeny has been added to GENERA tools !!!  
