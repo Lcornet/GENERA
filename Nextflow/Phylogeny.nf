@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.1 
+    Version: 1.0.2 
     
     Citation:
     Please cite : 
@@ -96,7 +96,7 @@ params.cpu = '1'
 params.companion = '/opt/companion/Phylogeny_companion.py'
 
 //version
-params.version = '1.0.1'
+params.version = '1.0.2'
 
 /*
 CORE PROGRAM
@@ -107,13 +107,51 @@ og_ch = Channel.fromPath(params.OG)
 idm_ch = Channel.fromPath(params.IDM)
 
 
+//change fasta 
+process changext {
+	//informations
+
+	//input output
+    input:
+    file '*.f*' from og_ch
+
+    output:
+    file 'EXT' into ext_ch1
+
+    //script
+    script:
+    println "GENERA info: format names with BMC"
+    if (params.mode == 'prot') {
+        println "GENERA info: fasta to faa"
+        """
+        mkdir EXT
+        cp .f/* EXT
+        cd EXT
+        find *.* | cut -f1 -d'.' > list
+        for f in `cat list`; do mv \$f.fasta \$f.faa; done
+        cd ../
+        """
+    }
+    else if (params.mode == 'DNA') {
+        println "GENERA info: fasta to fna"
+        """
+        mkdir EXT
+        cp .f/* EXT
+        cd EXT
+        find *.* | cut -f1 -d'.' > list
+        for f in `cat list`; do mv \$f.fasta \$f.fna; done
+        cd ../
+        """      
+    }
+}
+
 //BMC names format
 process format {
 	//informations
 
 	//input output
     input:
-    file '*.f*' from og_ch
+    file 'EXT' from ext_ch1
 
     output:
     file 'FASTA/*abbr*' into abbr_ch1
@@ -126,7 +164,7 @@ process format {
         println "GENERA info: Phylogeny protein mode"
         """
         mkdir FASTA
-        cp .f/* FASTA/
+        cp EXT/* FASTA/
         cd FASTA
         find *.* | cut -f1 -d'.' > list
         for f in `cat list`; do sed -i -e 's/@/ /g' \$f*.faa; inst-abbr-ids.pl \$f*.faa --id-regex=:DEF; sed -i -e 's/|//g' \$f*abbr*.faa; done
@@ -139,7 +177,7 @@ process format {
         println "GENERA info: Phylogeny DNA mode"
         """
         mkdir FASTA
-        cp .f/* FASTA/
+        cp EXT/* FASTA/
         cd FASTA
         find *.* | cut -f1 -d'.' > list
         for f in `cat list`; do sed -i -e 's/@/ /g' \$f*.fna; inst-abbr-ids.pl \$f*.fna --id-regex=:DEF; sed -i -e 's/|//g' \$f*abbr*.fna; done
@@ -246,6 +284,7 @@ process concatenation {
 	//input output
     input:
     file '*' from unambigous_ch1
+    val companion from params.companion
     file "GENERA-Phylogeny.log" from log_ch3
 
     output:
@@ -257,8 +296,12 @@ process concatenation {
     println "GENERA info: Concatenation"
     if (params.mode == 'prot') {
         """
+        echo 'runniner iter' > iter
+        $companion iter --mode=iter
         mkdir ali
-        mv *.ali ali/
+        mkdir raw/
+        mv *-iter.ali ali/
+        mv *.ali raw/
         scafos in=ali out=otu
         scafos in=ali out=data otu=otu/otu-freq.otu o=ov
         mkdir final-ali/
@@ -269,8 +312,13 @@ process concatenation {
     }
     else if (params.mode == 'DNA') {
         """
+        echo 'runniner iter' > iter
+        $companion iter --mode=iter
         mkdir ali
-        mv *.ali ali/
+        mkdir raw/
+        mv *-iter.ali ali/
+        mv *.ali raw/
+        #mv *.ali ali/
         scafos in=ali out=otu
         scafos in=ali out=data otu=otu/otu-freq.otu o=ov
         mkdir final-ali/
