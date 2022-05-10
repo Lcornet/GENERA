@@ -4,12 +4,13 @@
 """Kraken-ids-creation.py: Creation of ids to add genome in kraken db library."""
 __author__ = "Luc Cornet"
 __copyright__ = "Copyright 2020, University of Liège"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __maintainer__ = "Luc Cornet"
 __email__ = "luc.cornet@uliege.be"
 __status__ = "Production"
 
 import click
+import glob
 
 @click.command()
 ###ARGUMENT#####
@@ -99,13 +100,23 @@ def main(main_file, mode):
                     if (shortID == short):
                         newshort = id
                 temp_idm.write(str(long) + "\t" + str(newshort) + "\n")
+    
+    if (mode == 'iter'):
 
-
-
-
-
-
-
+        ali_list = glob.glob("*.ali")
+        for ali in ali_list:
+            alifile = open(ali)
+            aliiter = ali.replace(".ali", "-iter.ali")
+            ali_iter = open(aliiter, "w")
+            num = 1
+            for line in alifile:
+                record = line.replace("\n", "")
+                if ('>') in record:
+                    seq = str(record) + '@' + str(num)
+                    num += 1
+                    ali_iter.write(str(seq) + "\n")
+                else:
+                    ali_iter.write(str(record) + "\n")
 
 if __name__ == '__main__':
     main()
