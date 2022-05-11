@@ -35,7 +35,7 @@ def helpMessage() {
     
     Mandatory arguments:
     --shortreadsR1            Path to Illumina short reads forward, R1 fastq.
-    --shortreadsR2            Path to Illumina short reads reverse, R2 fastq.                
+    --shortreadsR2            Path to Illumina short reads reverse, R2 fastq.              
 
     Optional arguments:
     --ontreads                Path to Nanopore long reads, fastq
@@ -95,7 +95,7 @@ params.cpu = '1'
 params.RAM = '280'
 
 //Genome size: Mandatory if Long reads
-params.genomeSIZE = null
+params.genomeSIZE = '0'
 
 //Long read assembler
 params.longreadassembler= 'Flye'
