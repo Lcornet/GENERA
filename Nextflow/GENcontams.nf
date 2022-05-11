@@ -498,15 +498,20 @@ process busco {
     }
     else if (params.mode == 'all') {
         """
-        mkdir GEN
-        cp GENOMES/*abbr.fna GEN/
-        cd GEN/
-        find *.fna > list
-        sed -i -e 's/.fna//g' list
-        for f in `cat list`; do  sed -i -e 's/|/@/g' \$f.fna ; done
+        #mkdir GEN
+        #cp GENOMES/*abbr.fna GEN/
+        #cd GEN/
+        #find *.fna > list
+        #sed -i -e 's/.fna//g' list
+        #for f in `cat list`; do  sed -i -e 's/|/@/g' \$f.fna ; done
+        #cd ../
+        #busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
+        #echo "GENERA info: run busco" >> GENERA-contams.log
+        mkdir BUSCO/
+        cd BUSCO/
+        echo 'FALSE' > batch_summary.txt
         cd ../
-        busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
-        echo "GENERA info: run busco" >> GENERA-contams.log
+        echo "GENERA info: busco not activated" >> GENERA-contams.log
         """
     }
     else {
@@ -787,9 +792,8 @@ process publicationResults {
     script:
     if (params.mode == 'all') {
         """
-        $companion results.Checkm --mode=table --ckcompleteness=$ckcompleteness --ckcontamination=$ckcontamination \
-        --gunccss=$gunccss --guncrrs=$guncrrs --physetercontamination=$physetercontamination \
-        --krakencontamination=$krakencontamination --bucompleteness=$bucompleteness --budups=$budups --numcontigs=$numcontigs
+	echo "GENERA info: not All mode, no final table or positive list" > GENERA-contams.table
+        echo "GENERA info: not All mode, no final table or positive list" > positive-list.txt
         cp results.Checkm Checkm.results
         cp GUNC.progenomes_2.1.maxCSS_level.tsv GUNC.results
         cp batch_summary.txt* Busco.results
