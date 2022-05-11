@@ -247,7 +247,7 @@ process longreadsassembly {
             """
         }
         else if (params.longreadassembler == 'Flye'){
-            if (params.genomeSIZE == null){
+            if (params.genomeSIZE == '0'){
                 println "GENERA info: For long reads assembly, genome size is required"
                 """
                 """
@@ -262,7 +262,7 @@ process longreadsassembly {
             }
         }
         else if (params.longreadassembler == 'CANU'){
-            if (params.genomeSIZE == null){
+            if (params.genomeSIZE == '0'){
                 println "GENERA info: For long reads assembly, genome size is required"
                 """
                 """
@@ -288,7 +288,7 @@ process longreadsassembly {
             """
         }
         else if (params.longreadassembler == 'Flye'){
-            if (params.genomeSIZE == null){
+            if (params.genomeSIZE == '0'){
                 println "GENERA info: For long reads assembly, genome size is required"
                 """
                 """
@@ -303,7 +303,7 @@ process longreadsassembly {
             }
         }
         else if (params.longreadassembler == 'CANU'){
-            if (params.genomeSIZE == null){
+            if (params.genomeSIZE == '0'){
                 println "GENERA info: For long reads assembly, genome size is required"
                 """
                 """
