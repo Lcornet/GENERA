@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 1.0.2 
 
     Usage:
     
@@ -36,7 +36,7 @@ def helpMessage() {
     Optional arguments:
     --brakermode             Specify the mode of braker, with RNAseq + proteins (default = rnaseq) or with protein file only (= prot)
     --SRA                    Specific rnaseq SRA list file, default = none 
-    --prot                   Specific which prot file to use, fungi or test, default = fungi 
+    --prot                   Specific which prot file to use: fungi, protozoa, plants or test, default = fungi 
     --cpu                    number of cpus to use, default = 1
 
 
@@ -94,7 +94,7 @@ workingdir = file(confdir)
 params.companion = '/opt/braker_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '1.0.2'
 
 /*
 CORE PROGRAM
@@ -190,6 +190,18 @@ process getprot {
         """
         cp /scratch/ulg/GENERA/Databases/BRAKER/PROTDB/OrthoDB/fungi.faa proteins.faa
         echo "GENERA info: use fungi OrthDB prot file" >> GENERA-braker.log
+        """
+    }
+    else if (params.prot == 'protozoa') {
+        """
+        cp /scratch/ulg/GENERA/Databases/BRAKER/PROTDB/OrthoDB/protozoa.faa proteins.faa
+        echo "GENERA info: use protozoa OrthDB prot file" >> GENERA-braker.log
+        """
+    }
+    else if (params.prot == 'plants') {
+        """
+        cp /scratch/ulg/GENERA/Databases/BRAKER/PROTDB/OrthoDB/plants.faa proteins.faa
+        echo "GENERA info: use plants OrthDB prot file" >> GENERA-braker.log
         """
     }
 }
