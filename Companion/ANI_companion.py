@@ -25,6 +25,7 @@ def main(main_file, mode):
     #Open main file = ANI values
     ANI_of = defaultdict( lambda: defaultdict(lambda: defaultdict( dict )))
     PROX_of = defaultdict( lambda: defaultdict(lambda: defaultdict( dict )))
+    DUP_of = defaultdict( lambda: defaultdict(lambda: defaultdict( dict )))
     anifile = open(main_file)
     for line in anifile:
         record = line.replace("\n", "")
@@ -35,7 +36,16 @@ def main(main_file, mode):
         genome2 = genome2.replace(".fna", "")
         ANI = split_list[2]
         ANI_of[genome1][genome2] = ANI
-        PROX_of[genome1][ANI] = genome2
+        #When identical genomes, tell user
+        if (genome1 in ANI_of):
+            denest_of = PROX_of[genome1]
+            if (ANI in denest_of):
+                #Duplicate hits in ANI
+                duplicate = denest_of[ANI]
+                DUP_of[genome1][genome2] = duplicate
+            PROX_of[genome1][ANI] = genome2
+        else:
+            PROX_of[genome1][ANI] = genome2
 
     #Open list of genome
     genome_lists=[]
@@ -81,6 +91,14 @@ def main(main_file, mode):
     for master in genome_lists:
         cat = str(master) + '-closest-ANI.list'
         ANI_file = open(cat, "w")
+        #First print any identical genomes
+        if (master in DUP_of):
+            denest_of = DUP_of[master]
+            for duplicate in denest_of:
+                identical = denest_of[duplicate]
+                ANI_file.write(str(identical) + ' seems to be identical to ' + str(duplicate) + "\n" )
+
+        #closet part
         denest_of = PROX_of[master]
         #Sort denest of master based on ANI
         for ani in denest_of:

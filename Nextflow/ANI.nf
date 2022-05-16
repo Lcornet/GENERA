@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 1.1.0 
 
     Usage:
     
@@ -70,7 +70,7 @@ params.outdir='GENERA_ANI'
 params.companion = '/opt/companion/ANI_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '1.1.0'
 
 /*
 CORE PROGRAM
