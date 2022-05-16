@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.2 
+    Version: 1.0.3 
     
     Citation:
     Please cite : 
@@ -33,10 +33,11 @@ def helpMessage() {
     nextflow Phylogeny.nf --OG=OGs --IDM=file.idm --jackk=yes 
     
     Mandatory arguments:
-    --OG                    Path to OG directory in fasta format (.faa for prot and .fna files for DNA)
+    --OG                    Path to OG directory in fasta format (prot OGs or DNA OGs)
     --IDM                   Path to IDM file
 
     Optional arguments:
+    --ext                   specify the extention of input file (fa, fasta, faa, fna), default = .faa
     --mode                  specify prot or DNA, default = prot
     --align                 activate the alignment for protein, yes or no, default = no
     --jackk                 activate jackknife, default = no
@@ -71,6 +72,9 @@ if (params.IDM == null) {
 	exit 1, "Path to IDM file containing final names."
 }
 
+//ext
+params.ext = 'faa'
+
 //mode
 params.mode = 'prot'
 
@@ -96,7 +100,7 @@ params.cpu = '1'
 params.companion = '/opt/companion/Phylogeny_companion.py'
 
 //version
-params.version = '1.0.2'
+params.version = '1.0.3'
 
 /*
 CORE PROGRAM
@@ -122,26 +126,68 @@ process changext {
     script:
     println "GENERA info: format names with BMC"
     if (params.mode == 'prot') {
-        println "GENERA info: fasta to faa"
-        """
-        mkdir EXT
-        cp .f/* EXT
-        cd EXT
-        find *.* | cut -f1 -d'.' > list
-        for f in `cat list`; do mv \$f.fasta \$f.faa; done
-        cd ../
-        """
+        if (params.ext == 'fasta') {
+            println "GENERA info: fasta to faa"
+            """
+            mkdir EXT
+            cp .f/* EXT
+            cd EXT
+            find *.* | cut -f1 -d'.' > list
+            for f in `cat list`; do mv \$f.fasta \$f.faa; done
+            cd ../
+            """
+        }
+        else if (params.ext == 'fa') {
+            println "GENERA info: fa to faa"
+            """
+            mkdir EXT
+            cp .f/* EXT
+            cd EXT
+            find *.* | cut -f1 -d'.' > list
+            for f in `cat list`; do mv \$f.fa \$f.faa; done
+            cd ../
+            """
+        }
+        else if (params.ext == 'faa') {
+            println "GENERA info: OGs already with faa ext"
+            """
+            mkdir EXT
+            cp .f/* EXT
+            cd EXT
+            """
+        }
     }
     else if (params.mode == 'DNA') {
-        println "GENERA info: fasta to fna"
-        """
-        mkdir EXT
-        cp .f/* EXT
-        cd EXT
-        find *.* | cut -f1 -d'.' > list
-        for f in `cat list`; do mv \$f.fasta \$f.fna; done
-        cd ../
-        """      
+        if (params.ext == 'fasta') {
+            println "GENERA info: fasta to fna"
+            """
+            mkdir EXT
+            cp .f/* EXT
+            cd EXT
+            find *.* | cut -f1 -d'.' > list
+            for f in `cat list`; do mv \$f.fasta \$f.fna; done
+            cd ../
+            """
+        }  
+        else if (params.ext == 'fa') {
+            println "GENERA info: fa to fna"
+            """
+            mkdir EXT
+            cp .f/* EXT
+            cd EXT
+            find *.* | cut -f1 -d'.' > list
+            for f in `cat list`; do mv \$f.fa \$f.fna; done
+            cd ../
+            """
+        } 
+        else if (params.ext == 'fna') {
+            println "GENERA info: OGs already with fna ext"
+            """
+            mkdir EXT
+            cp .f/* EXT
+            cd EXT
+            """
+        }   
     }
 }
 
