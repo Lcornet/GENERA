@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.4 
+    Version: 2.0.5 
     
     Citation:
     Please cite : 
@@ -136,7 +136,7 @@ params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
 params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.4'
+params.version = '2.0.5'
 
 /*
 CORE PROGRAM
@@ -777,18 +777,34 @@ process specific {
         }
     }
     else {
-        println "GENERA info: core gene option not activated"
-        """
-        mkdir CANDIDATEspec
-        mkdir ANVIO-files
-        mkdir OG-BMC
-        mv ORTHO/*BMC_OG.fasta OG-BMC/
-        echo "GENERA info: specific gene option not activated" > filtered-OG.list
-        echo "GENERA info: specific gene option not activated" >> CANDIDATEspec/info
-        echo "GENERA info: specific gene option not activated" >> ANVIO-files/info
-        echo "GENERA info: specific gene option not activated" >> OG-BMC/info
-        echo "GENERA info: specific gene option not activated" >> GENERA-SGC.log  
-        """
+        if (params.anvio == 'yes') {
+            println "GENERA info: core gene option not activated"
+            """
+            mkdir CANDIDATEspec
+            mkdir ANVIO-files
+            mkdir OG-BMC
+            mv ORTHO/*BMC_OG.fasta OG-BMC/
+            echo "GENERA info: specific gene option not activated" > filtered-OG.list
+            echo "GENERA info: specific gene option not activated" >> CANDIDATEspec/info
+            echo "GENERA info: specific gene option not activated" >> ANVIO-files/info
+            echo "GENERA info: specific gene option not activated" >> OG-BMC/info
+            echo "GENERA info: specific gene option not activated" >> GENERA-SGC.log  
+            """
+        }
+        else {
+            println "GENERA info: core gene option not activated"
+            """
+            mkdir CANDIDATEspec
+            mkdir ANVIO-files
+            mkdir OG-BMC
+            mv ORTHO/*.fa OG-BMC/
+            echo "GENERA info: specific gene option not activated" > filtered-OG.list
+            echo "GENERA info: specific gene option not activated" >> CANDIDATEspec/info
+            echo "GENERA info: specific gene option not activated" >> ANVIO-files/info
+            echo "GENERA info: specific gene option not activated" >> OG-BMC/info
+            echo "GENERA info: specific gene option not activated" >> GENERA-SGC.log  
+            """            
+        }
     }
 }
 
