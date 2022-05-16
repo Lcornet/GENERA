@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 1.0.1 
 
     Usage:
     
@@ -34,6 +34,8 @@ def helpMessage() {
     --bank                   Path to Genomes directory in fasta format
 
     Optional arguments:
+    --ext                    Specify the extention of input file (fa, fasta, faa), default = .faa
+    --align                  align OGs before reverse translate, default = yes  
     --verbosity              Specify the verbosity of leel, default = 5
 
     """.stripIndent()
@@ -63,7 +65,13 @@ if (params.bank == null) {
 	exit 1, "Path to Genomes directory in fasta format"
 }
 
-//mode
+//ext
+params.ext = 'faa'
+
+//align
+params.align = 'yes'
+
+//verbosity
 params.verbosity = '5'
 
 //cpu
@@ -76,7 +84,7 @@ params.outdir='GENERA-OGsRtranslate'
 params.companion = '/opt/companion/OGsRtranslate_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '1.0.1'
 
 /*
 CORE PROGRAM
@@ -86,8 +94,9 @@ CORE PROGRAM
 og_ch = Channel.fromPath(params.OG)
 bank_ch = Channel.fromPath(params.bank)
 
-//OGs alignment
-process alignment {
+
+//change ext 
+process changext {
 	//informations
 
 	//input output
@@ -95,23 +104,84 @@ process alignment {
     file '*.f*' from og_ch
 
     output:
+    file 'EXT' into ext_ch1
+
+    //script
+    script:
+    println "GENERA info: change ext"
+    if (params.ext == 'fasta') {
+        println "GENERA info: fasta to faa"
+        """
+        mkdir EXT
+        cp .f/* EXT
+        cd EXT
+        find *.* | cut -f1 -d'.' > list
+        for f in `cat list`; do mv \$f.fasta \$f.faa; done
+        sed -i -e 's/|/@/g' *.faa
+        cd ../
+        """
+    }
+    else if (params.ext == 'fa') {
+        println "GENERA info: fa to faa"
+        """
+        mkdir EXT
+        cp .f/* EXT
+        cd EXT
+        find *.* | cut -f1 -d'.' > list
+        for f in `cat list`; do mv \$f.fa \$f.faa; done
+        sed -i -e 's/|/@/g' *.faa
+        cd ../
+        """
+    }
+    else if (params.ext == 'faa') {
+        println "GENERA info: OGs already with faa ext"
+        """
+        mkdir EXT
+        cp .f/* EXT
+        cd EXT
+        sed -i -e 's/|/@/g' *.faa
+        cd ../
+        """
+    }
+}
+
+
+//OGs alignment
+process alignment {
+	//informations
+
+	//input output
+    input:
+    file 'EXT' from ext_ch1
+
+    output:
     file 'aligned/*' into ali_ch1
     file "GENERA-OGsRtranslate.log" into log_ch1
 
     //script
     script:
-    println "GENERA info: OGs alignment"
-    """
-    mkdir aligned
-    mkdir OGs
-    cp .f/*.faa OGs
-    cd OGs/
-    find *.faa | cut -f1 -d"." > list
-    mv list ../
-    cd ../
-    for f in `cat list`; do muscle3.8.31_i86linux64 -in OGs/\$f.faa -out aligned/\$f.faa; done    
-    echo "GENERA info: OGs alignment" >> GENERA-OGsRtranslate.log
-    """
+    if (params.align == 'yes') {
+        println "GENERA info: OGs alignment"
+        """
+        mkdir aligned
+        mkdir OGs
+        cp EXT/*.faa OGs
+        cd OGs/
+        find *.faa | cut -f1 -d"." > list
+        mv list ../
+        cd ../
+        for f in `cat list`; do muscle3.8.31_i86linux64 -in OGs/\$f.faa -out aligned/\$f.faa; done    
+        echo "GENERA info: OGs alignment" >> GENERA-OGsRtranslate.log
+        """
+    }
+    else {
+        println "GENERA info: OGs already aligned"
+        """
+        mkdir aligned
+        cp EXT/*.faa aligned  
+        echo "GENERA info: OGs already aligned" >> GENERA-OGsRtranslate.log
+        """
+    }
 }
 
 //DNA translation
