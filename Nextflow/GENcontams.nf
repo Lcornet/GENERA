@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 2.0.0 
 
     Usage:
     
@@ -137,7 +137,7 @@ params.outdir='GENERA-contams'
 params.companion = '/opt/companion/Contams_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '2.0.0'
 
 /*
 CORE PROGRAM
@@ -210,7 +210,6 @@ process taxonomy {
 
 
 //Download DB
-//Get gunc bd files
 process DBSetUp {
 	//informations
 
@@ -223,6 +222,7 @@ process DBSetUp {
     val databases into dabatses_ch2
     val databases into dabatses_ch3
     val databases into dabatses_ch4
+    val databases into dabatses_ch5
     file "db_path.txt" into db_path1
     file 'GENERA-contams.log' into log_ch1
 
@@ -295,6 +295,70 @@ process DBSetUp {
     }
 }
 
+//Get EukCCDB
+process EUKCCDBSetUp {
+	//informations
+
+	//input output
+    input:
+    val dbdir from dbdir_ch2
+    
+    output:
+
+    //script
+    script:
+
+    databases = 'na'
+
+    if (params.dbdir == 'local'){
+        println "GENERA-INFO: DB directory not specified -> project dir"
+
+        if( !workingdb.exists() ) {
+            println "GENERA-INFO: DB directory not found in project dir -> Created"
+            if( !workingdb.mkdirs() )    {
+                exit 1, "Cannot create working directory"
+            }
+
+            databases = workingdb
+
+            """
+            echo "GENERA info: DB directory not specified" >> GENERA-contams.log
+            echo "GENERA info: DB directory not found in project dir -> Created" >> GENERA-contams.log
+
+            #Set up EUKCC DB
+            wget http://ftp.ebi.ac.uk/pub/databases/metagenomics/eukcc/eukcc2_db_ver_1.1.tar.gz
+            tar -xzf eukcc2_db_ver_1.1.tar.gz
+            mkdir $workingdb/eukcc
+            mv eukcc2_db_ver_1.1 $workingdb/eukcc/
+
+            """
+        }
+        else {
+            println "GENERA-INFO: DB directory found in project dir -> Used"
+
+            databases = workingdb 
+
+ 	        """
+            echo $workingdb > db_path.txt
+            echo "GENERA info: DB directory not specified" >> GENERA-contams.log
+            echo "GENERA-INFO: DB directory found in project dir -> Used" >> GENERA-contams.log
+		    """           
+
+        }
+    }
+
+	else{
+        println "GENERA-INFO: DB directory specifies"
+
+        databases = dbdir
+
+		"""
+        echo $dbdir > db_path.txt
+        echo "GENERA-INFO: DB directory specified" >> GENERA-contams.log
+		"""		
+    }
+}
+
 
 //format
 process format {
@@ -311,6 +375,7 @@ process format {
     file 'GENOMES/' into genomes_ch3
     file 'GENOMES/' into genomes_ch4
     file 'GENOMES/' into genomes_ch5
+    file 'GENOMES/' into genomes_ch6
     file 'SPLIT/' into split_ch1
     file 'SPLIT/' into split_ch2
     file 'GENERA-contams.log' into log_ch2
@@ -748,6 +813,60 @@ process quast {
     }
 }
 
+//eukcc
+process eukcc {
+	//informations
+
+	//input output
+    input:
+    file '*' from genomes_ch5
+    val cpu from params.cpu
+    val databases from dabatses_ch5
+    file 'GENERA-contams.log' from log_ch8
+
+    output:
+    file 'outfolder' into eukcc_ch1
+    file 'GENERA-contams.log' into log_ch9
+
+    //script
+    script:
+    if (params.mode == 'eukcc') {
+        """
+        mkdir bins/
+        cp GENOMES/* bins/
+        cd bins/
+        find *.fna > list
+        sed -i -e 's/.fna//g' list
+        for f in `cat list`; do mv \$f.fna \$f.fa; done
+        cd ../
+        #Run eukcc
+        eukcc folder --out outfolder --threads $cpu bins --db $databases/eukcc/eukcc2_db_ver_1.1/
+        echo "GENERA info: run eukcc" >> GENERA-contams.log
+        """
+    }
+    else if (params.mode == 'all') {
+        """
+        mkdir bins/
+        cp GENOMES/* bins/
+        cd bins/
+        find *.fna > list
+        sed -i -e 's/.fna//g' list
+        for f in `cat list`; do mv \$f.fna \$f.fa; done
+        cd ../
+        #Run eukcc
+        eukcc folder --out outfolder --threads $cpu bins --db $databases/eukcc/eukcc2_db_ver_1.1/
+        echo "GENERA info: run eukcc" >> GENERA-contams.log
+        """
+    }
+    else {
+        """
+        mkdir outfolder 
+        echo 'FALSE' > outfolder/eukcc.report
+        echo "GENERA info: eukcc not activated" >> GENERA-contams.log
+        """
+    }
+}
+
 //output the results
 process publicationResults {
 	//informations
@@ -755,7 +874,7 @@ process publicationResults {
 
 	//input output
     input:
-    file 'GENOMES/' from genomes_ch5
+    file 'GENOMES/' from genomes_ch6
     file 'results.Checkm' from checkm_ch1
     file 'GUNC.progenomes_2.1.maxCSS_level.tsv' from gunc_ch1
     file 'batch_summary.txt*' from busco_ch1
@@ -763,7 +882,8 @@ process publicationResults {
     file 'KRAKEN/' from kraken_ch1
     file 'Kraken.report' from kraken_ch2
     file 'quast.report' from quast_ch1
-    file 'GENERA-contams.log' from log_ch8
+    file 'outfolder' from eukcc_ch1
+    file 'GENERA-contams.log' from log_ch9
     val companion from params.companion
     val ckcompleteness from params.ckcompleteness
     val ckcontamination from params.ckcontamination
@@ -786,13 +906,15 @@ process publicationResults {
     file 'Physeter.results' into physeterfinal_ch
     file 'KRAKEN-results' into  krakenfinal_ch
     file 'Kraken.results' into  krakenRfinal_ch
+    file 'Eukccc-results' into eukccfinal_ch
+    file 'eukcc.results' into eukccRfinal_ch
     file 'Quast.results' into quastfinal_ch
 
     //script
     script:
     if (params.mode == 'all') {
         """
-	echo "GENERA info: not All mode, no final table or positive list" > GENERA-contams.table
+	    echo "GENERA info: not All mode, no final table or positive list" > GENERA-contams.table
         echo "GENERA info: not All mode, no final table or positive list" > positive-list.txt
         cp results.Checkm Checkm.results
         cp GUNC.progenomes_2.1.maxCSS_level.tsv GUNC.results
@@ -802,6 +924,9 @@ process publicationResults {
         cp Kraken.report Kraken.results
         mkdir KRAKEN-results
         cp -r KRAKEN/* KRAKEN-results/
+        mkdir Eukccc-results/
+        cp outfolder/eukcc.csv eukcc.results
+        cp -r outfolder/* Eukccc-results/
         echo "GENERA info: making final table" >> GENERA-contams.log
         echo "Version:" >> GENERA-contams.log
         echo $version >> GENERA-contams.log
@@ -819,6 +944,9 @@ process publicationResults {
         cp Kraken.report Kraken.results
         mkdir KRAKEN-results
         cp -r KRAKEN/* KRAKEN-results/
+        mkdir Eukccc-results/
+        cp outfolder/eukcc.csv eukcc.results
+        cp -r outfolder/* Eukccc-results/
         echo "GENERA info: not All mode, no final table or positive list" >> GENERA-contams.log
         echo "Version:" >> GENERA-contams.log
         echo $version >> GENERA-contams.log
