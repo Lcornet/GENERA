@@ -557,12 +557,13 @@ process busco {
         sed -i -e 's/.fna//g' list
         for f in `cat list`; do  sed -i -e 's/|/@/g' \$f.fna ; done
         cd ../
-        busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
+        /opt/busco/bin/busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
         echo "GENERA info: run busco" >> GENERA-contams.log
         """
     }
     else if (params.mode == 'all') {
         """
+        #Deactivate busco from all mode
         #mkdir GEN
         #cp GENOMES/*abbr.fna GEN/
         #cd GEN/
@@ -570,7 +571,7 @@ process busco {
         #sed -i -e 's/.fna//g' list
         #for f in `cat list`; do  sed -i -e 's/|/@/g' \$f.fna ; done
         #cd ../
-        #busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
+        #/opt/busco/bin/busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
         #echo "GENERA info: run busco" >> GENERA-contams.log
         mkdir BUSCO/
         cd BUSCO/
@@ -861,7 +862,7 @@ process eukcc {
     else {
         """
         mkdir outfolder 
-        echo 'FALSE' > outfolder/eukcc.report
+        echo 'FALSE' > outfolder/eukcc.csv 
         echo "GENERA info: eukcc not activated" >> GENERA-contams.log
         """
     }
@@ -914,8 +915,10 @@ process publicationResults {
     script:
     if (params.mode == 'all') {
         """
-	    echo "GENERA info: not All mode, no final table or positive list" > GENERA-contams.table
-        echo "GENERA info: not All mode, no final table or positive list" > positive-list.txt
+        deactivate final table because of busco
+        #$companion results.Checkm --mode=table --ckcompleteness=$ckcompleteness --ckcontamination=$ckcontamination \
+        #--gunccss=$gunccss --guncrrs=$guncrrs --physetercontamination=$physetercontamination \
+        #--krakencontamination=$krakencontamination --bucompleteness=$bucompleteness --budups=$budups --numcontigs=$numcontigs
         cp results.Checkm Checkm.results
         cp GUNC.progenomes_2.1.maxCSS_level.tsv GUNC.results
         cp batch_summary.txt* Busco.results

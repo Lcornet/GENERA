@@ -227,7 +227,8 @@ process modelling {
         --output-file \$f.fa; done
         for f in `cat fnalist`; do anvi-gen-contigs-database --contigs-fasta \$f.fa \
         --project-name \$f --output-db-path \$f-CONTIG.db --num-threads $cpu; done
-        for f in `cat fnalist`; do anvi-run-kegg-kofams --kegg-data-dir $keggdir \
+        echo "GENERA info: modelling mode, running anvio: anvi-run-kegg-kofams" >> GENERA-METABO.log
+        for f in `cat fnalist`; do echo \$f; anvi-run-kegg-kofams --kegg-data-dir $keggdir \
         -c \$f-CONTIG.db -T $cpu; done
         for f in `cat fnalist`; do anvi-estimate-metabolism --kegg-data-dir $keggdir \
         -c \$f-CONTIG.db -O \$f-metabo; done

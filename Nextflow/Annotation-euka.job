@@ -10,4 +10,4 @@
 export OMP_NUM_THREADS=20
 export MKL_NUM_THREADS=20
 
-singularity exec --bind /scratch/ulg/GENERA/Databases/AMAW:/temp,<FIELD1>:/mnt /scratch/ulg/GENERA/amaw.sif amaw.pl --genome=/mnt/<FIELD2> --organism=<FIELD3> --proteins=1 --est=1 --taxdir=/temp/taxdump/ --maker-cpus=20 --trinity-cpus=20 --rsem-cpus=20  --outdir=/mnt/GENERA-annotation --prot-dbs=/temp/prot_dbs/
+singularity exec --bind /scratch/ulg/GENERA/Databases/AMAW:/temp,<FIELD1>:/mnt /scratch/ulg/GENERA/amaw.sif amaw.pl --genome=/mnt/<FIELD2> --organism=<FIELD3> --proteins=1 --est=1 --taxdir=/temp/taxdump/ --maker-cpus=20 --trinity-cpus=20 --rsem-cpus=20 --augustus-db=/mnt/augustus-config/ --outdir=/mnt/GENERA-annotation --prot-dbs=/temp/prot_dbs/
