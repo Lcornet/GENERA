@@ -563,21 +563,21 @@ process busco {
     }
     else if (params.mode == 'all') {
         """
-        #Deactivate busco from all mode
-        #mkdir GEN
-        #cp GENOMES/*abbr.fna GEN/
-        #cd GEN/
-        #find *.fna > list
-        #sed -i -e 's/.fna//g' list
-        #for f in `cat list`; do  sed -i -e 's/|/@/g' \$f.fna ; done
-        #cd ../
-        #/opt/busco/bin/busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
-        #echo "GENERA info: run busco" >> GENERA-contams.log
-        mkdir BUSCO/
-        cd BUSCO/
-        echo 'FALSE' > batch_summary.txt
+        mkdir GEN
+        cp GENOMES/*abbr.fna GEN/
+        cd GEN/
+        find *.fna > list
+        sed -i -e 's/.fna//g' list
+        for f in `cat list`; do  sed -i -e 's/|/@/g' \$f.fna ; done
         cd ../
-        echo "GENERA info: busco not activated" >> GENERA-contams.log
+        /opt/busco/bin/busco -m genome -i GEN/ -o BUSCO --auto-lineage --download_path $databases/busco_downloads/ --cpu $cpu
+        echo "GENERA info: run busco" >> GENERA-contams.log
+        #
+        #mkdir BUSCO/
+        #cd BUSCO/
+        #echo 'FALSE' > batch_summary.txt
+        #cd ../
+        #echo "GENERA info: busco not activated" >> GENERA-contams.log
         """
     }
     else {

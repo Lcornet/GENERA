@@ -213,7 +213,7 @@ process format {
         cp EXT/* FASTA/
         cd FASTA
         find *.* | cut -f1 -d'.' > list
-        for f in `cat list`; do sed -i -e 's/@/ /g' \$f*.faa; inst-abbr-ids.pl \$f*.faa --id-regex=:DEF; sed -i -e 's/|//g' \$f*abbr*.faa; done
+        for f in `cat list`; do sed -i -e 's/@/ /g' \$f*.faa; sed -i -e 's/|/ /g' \$f*.faa ; inst-abbr-ids.pl \$f*.faa --id-regex=:DEF; sed -i -e 's/|//g' \$f*abbr*.faa; done
         cd ../
         echo "GENERA info: Phylogeny protein mode" >> GENERA-Phylogeny.log
         echo "GENERA info: format names with BMC" >> GENERA-Phylogeny.log
@@ -226,7 +226,7 @@ process format {
         cp EXT/* FASTA/
         cd FASTA
         find *.* | cut -f1 -d'.' > list
-        for f in `cat list`; do sed -i -e 's/@/ /g' \$f*.fna; inst-abbr-ids.pl \$f*.fna --id-regex=:DEF; sed -i -e 's/|//g' \$f*abbr*.fna; done
+        for f in `cat list`; do sed -i -e 's/@/ /g' \$f*.fna; sed -i -e 's/|/ /g' \$f*.fna; inst-abbr-ids.pl \$f*.fna --id-regex=:DEF; sed -i -e 's/|//g' \$f*abbr*.fna; done
         cd ../
         echo "GENERA info: Phylogeny DNA mode" >> GENERA-Phylogeny.log
         echo "GENERA info: format names with BMC" >> GENERA-Phylogeny.log

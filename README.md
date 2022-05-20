@@ -11,6 +11,7 @@ Please visit
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
 # NEWS
+20/05 !!!  BUSCO is now available in GENcontam, from all and busco mode !!!   
 16/05 !!!  EukCC has been added to GENcontams tool version 2.0.0, can be used as an alternative to BUSCO !!!   
 11/05 !!!  BUSCO is temporarily disabled from GENcontams du to permission issue, see issue 23 for info !!!   
 10/05 !!!  Braker has been added to Annotation tool !!!   
