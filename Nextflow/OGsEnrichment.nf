@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 1.0.1 
 
     Usage:
     
@@ -35,7 +35,7 @@ def helpMessage() {
     --org                    Path to organism to add in fasta format, prot of DNA
 
     Optional arguments:
-    --orgType                Specify OG type, DNA or prot, default = DNA
+    --orgType                Specify org type, DNA or prot, default = prot
     --align                  Specify alignment of OGs, yes or no, default = yes
     --ftaligner              Specify forty-two aligner mode, blast or exonerate, default = blast
     --degap                  Degap OGs affter enrichment and realign (only if --org is prot), yes or no, default = no
@@ -109,7 +109,7 @@ workingdir = file(taxdir)
 params.companion = '/opt/companion/OGsEnrichment_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '1.0.1'
 
 /*
 CORE PROGRAM
@@ -240,7 +240,7 @@ process Enrichment {
 
     //script
     script:
-    if (params.orgType != 'prot'){
+    if (params.orgType == 'prot'){
         println "GENERA info: org type is set as prot" 
         if (params.degap == 'no'){
             println "GENERA info: degap not activated"
@@ -253,6 +253,7 @@ process Enrichment {
             cd ref-banks/
             find *.faa > list
             sed -i -e 's/.faa//g' list
+            for f in `cat list`; do inst-abbr-ids.pl \$f.faa --id-regex=:DEF; mv \$f-abbr.faa \$f.faa; sed -i -e 's/|//g' \$f.faa; done
             for f in `cat list`; do makeblastdb -in \$f.faa -dbtype prot -parse_seqids -out \$f; done
             #for f in `cat list `; do echo ".psq" ; done > end.list
             #paste list end.list > part1
@@ -324,6 +325,7 @@ process Enrichment {
             cd ref-banks/
             find *.faa > list
             sed -i -e 's/.faa//g' list
+            for f in `cat list`; do inst-abbr-ids.pl \$f.faa --id-regex=:DEF; mv \$f-abbr.faa \$f.faa; sed -i -e 's/|//g' \$f.faa; done
             for f in `cat list`; do makeblastdb -in \$f.faa -dbtype prot -parse_seqids -out \$f; done
             #for f in `cat list `; do echo ".psq" ; done > end.list
             #paste list end.list > part1
@@ -394,7 +396,7 @@ process Enrichment {
             """
         }
     }
-    else if (params.orgType != 'DNA') {
+    else if (params.orgType == 'DNA') {
         println "GENERA info: rog type is set as DNA" 
         """
         echo "GENERA info: 42, org type is set as DNA" >> GENERA-OGsEnrichment.log
@@ -404,6 +406,7 @@ process Enrichment {
         cd ref-banks/
         find *.faa > list
         sed -i -e 's/.faa//g' list
+        for f in `cat list`; do inst-abbr-ids.pl \$f.faa --id-regex=:DEF; mv \$f-abbr.faa \$f.faa; sed -i -e 's/|//g' \$f.faa; done
         for f in `cat list`; do makeblastdb -in \$f.faa -dbtype prot -parse_seqids -out \$f; done
         #for f in `cat list `; do echo ".psq" ; done > end.list
         #paste list end.list > part1
