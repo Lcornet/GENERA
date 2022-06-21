@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 2.0.0 
     
     Citation:
     Please cite : 
@@ -38,6 +38,7 @@ def helpMessage() {
 
     Optional arguments:
     --mode                  specify prot or DNA, default = prot
+    --degap                 activate degap of sequences (delete all gap befaore new alignment), yes or no, default = no
     --align                 activate the alignment for protein, yes or no, default = no
     --cpu                   number of cpus to use, default = 1
 
@@ -71,6 +72,9 @@ if (params.IDM == null) {
 //mode
 params.mode = 'prot'
 
+//degap
+params.degap = 'no'
+
 //align
 params.align = 'no'
 
@@ -84,7 +88,7 @@ params.cpu = '1'
 params.companion = '/opt/companion/Phylogeny_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '2.0.0'
 
 /*
 CORE PROGRAM
@@ -105,7 +109,7 @@ process format {
 
     output:
     file 'FASTA/*abbr*' into abbr_ch1
-    file "GENERA-Phylogeny.log" into log_ch1
+    file "GENERA-Phylogeny.log" into log_ch0
 
     //script
     script:
@@ -139,13 +143,62 @@ process format {
 }
 
 
+//degap
+process degap {
+	//informations
+
+	//input output
+    input:
+    file '*' from abbr_ch1
+    file "GENERA-Phylogeny.log" from log_ch0
+
+    output:
+    file 'DEGAP' into degap_ch
+    file "GENERA-Phylogeny.log" into log_ch1
+
+    //script
+    script:
+    println "GENERA info: degap part"
+    if (params.degap == 'yes') {
+        if (params.mode == 'prot') {
+            """
+            find *.faa | cut -f1 -d"." > list
+            for f in `cat list`; do fasta2ali.pl \$f.faa; rm -f \$f.faa; done
+            for f in `cat list`; do ali2fasta.pl \$f.ali --degap; done
+            for f in `cat list`; do fasta2ali.pl \$f.fasta; mv \$f.fasta \$f.faa; done
+            mkdir DEGAP
+            mv *.faa DEGAP/
+            echo "GENERA info: run degap mode" >> GENERA-Phylogeny.log
+            """
+        }
+        else if (params.mode == 'DNA') {
+            """
+            find *.fna | cut -f1 -d"." > list
+            for f in `cat list`; do fasta2ali.pl \$f.fna; rm -f \$f.fna; done
+            for f in `cat list`; do ali2fasta.pl \$f.ali --degap; done
+            for f in `cat list`; do fasta2ali.pl \$f.fasta; mv \$f.fasta \$f.fna; done
+            mkdir DEGAP
+            mv *.fna DEGAP/
+            echo "GENERA info: run degap mode" >> GENERA-Phylogeny.log
+            """
+        }
+    }
+    else if (params.degap == 'no') {
+        """
+        mkdir DEGAP
+        mv *.f* DEGAP/
+        echo "GENERA info: degap mode not activated" >> GENERA-Phylogeny.log
+        """            
+    }
+}
+
 //Alignment
 process alignment {
 	//informations
 
 	//input output
     input:
-    file '*' from abbr_ch1
+    file 'DEGAP' from degap_ch
     file "GENERA-Orthology.log" from log_ch1
 
     output:
@@ -158,6 +211,7 @@ process alignment {
     if (params.mode == 'prot') {
         if (params.align == 'yes') {
             """
+            mv DEGAP/* .
             mkdir aligned
             mkdir OGs
             find *.faa | cut -f1 -d"." > list
@@ -168,6 +222,7 @@ process alignment {
         }
         else if (params.align == 'no') {
             """
+            mv DEGAP/* .
             mkdir aligned
             mv *.faa aligned/
             echo "GENERA info: No prot alignment" >> GENERA-Phylogeny.log
@@ -176,6 +231,7 @@ process alignment {
     }
     else if (params.mode == 'DNA') {
         """
+        mv DEGAP/* .
         mkdir aligned
         mv *.fna aligned/
         echo "GENERA info: No alignment for DNA files" >> GENERA-Phylogeny.log
@@ -195,6 +251,7 @@ process unambiguousPosition {
     output:
     file 'UNAMBIG/*.ali' into unambigous_ch1
     file 'UNAMBIG/*.ali' into unambigous_ch2
+    file 'ALIGNU' into alignu_ch
     file "GENERA-Phylogeny.log" into log_ch3
 
     //script
@@ -204,22 +261,27 @@ process unambiguousPosition {
         """
         mkdir BMGE
         mkdir UNAMBIG
+        mkdir ALIGNU
         mv *.faa BMGE/
         cd BMGE
         fasta2ali.pl *.faa
         ali2phylip.pl *.ali --bmge-mask=medium --ali
+        ali2fasta.pl *.ali
         cd ../
         mv BMGE/*a2p.ali UNAMBIG/
+        cp BMGE/*a2p.fasta ALIGNU/
         echo "GENERA info: Unambiguous position conservation" >> GENERA-Phylogeny.log
         """
     }
     else if (params.mode == 'DNA') {
         """
         mkdir UNAMBIG
+        mkdir ALIGNU
         mv *.fna UNAMBIG
         cd UNAMBIG/
         fasta2ali.pl *.fna
         cd ../
+        cp *.fna ALIGNU/
         echo "GENERA info: No unambiguous position conservation for DNA files" >> GENERA-Phylogeny.log
         """
     }
@@ -294,12 +356,14 @@ process publicationResults {
     input:
     file 'TREE' from mltree_ch1
     file 'IDM' from idm_ch
+    file 'ALIGNU' from alignu_ch
     val companion from params.companion
     val version from params.version
     file "GENERA-Phylogeny.log" from log_ch4
 
     output:
     file 'FORMAT-TREES' into formattreesFINAL_ch
+    file 'UNAMBIGUOUS' into unambigousFINAL_ch
     file "GENERA-Phylogeny.log" into logFINAL_ch
 
     //script
@@ -307,6 +371,7 @@ process publicationResults {
     println "GENERA info: format-trees"
     """
     mkdir FORMAT-TREES
+    mkdir UNAMBIGUOUS
     cp TREE/*.tre FORMAT-TREES/
     cd FORMAT-TREES/
     cp ../IDM .
@@ -315,7 +380,8 @@ process publicationResults {
     for f in `cat list`; do tree2list.pl \$f.tre; sed -i -e 's/ /_/g' \$f.idl; done
     for f in `cat list`; do $companion \$f.idl --mode=IDM; mv idm.temp \$f.idm; done
     for f in `cat list`; do format-tree.pl \$f.tre --map-ids; mv \$f.tre \$f-prot-format.tre; done
-    cd ../         
+    cd ../    
+    mv ALIGNU/* UNAMBIGUOUS/
     echo "GENERA info: format-trees" >> GENERA-Phylogeny.log
     echo VERSION: >> GENERA-Phylogeny.log
     echo $version >> GENERA-Phylogeny.log

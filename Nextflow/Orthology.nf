@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.5 
+    Version: 2.0.6 
     
     Citation:
     Please cite : 
@@ -34,23 +34,26 @@ def helpMessage() {
     --core=yes --corelist=corelist --specific=yes --specificlist=specificlist --anvio=yes 
     
     Mandatory arguments:
-    --mode                  Specify mode, OG or inference mode.  
-    --infiles               Path to sequences files: '.fna' for nucleotide, or '.faa' for protein or '.fa' for OG.
-    --type                  Specify infile type: nucleotide (only for prokaryote), protein. 
+    --mode                   Specify mode, OG or inference mode.  
+    --infiles                Path to sequences files: '.fna' for nucleotide, or '.faa' for protein or '.fa' for OG.
+    --type                   Specify infile type: nucleotide (only for prokaryote), protein. 
 
     Optional arguments:
-    --anvio                 Activate anvio pangenomic for orthology, only available for bacteria, yes or no. Default = no.
-                            This option will also determine the origin of OGs (Orthofinder or anvio) when the mode is set as OG.
-    --core                  Extract core gene. Default = no.
-                            A list of organism is required with this options.
-    --corelist              Path to a list of organism to consider for core genes.
-    --specific              Extract specific gene. Default = no.
-                            A list of organism is required with this options.
-    --specificlist          Path to a list of organism to consider for specific genes.
-    --progigalProcedure     Select procedure of prodigal, meta or single, default = single
+    --anvio                  Activate anvio pangenomic for orthology, only available for bacteria, yes or no. Default = no.
+                             This option will also determine the origin of OGs (Orthofinder or anvio) when the mode is set as OG.
+    --core                   Extract core gene. Default = no.
+                             A list of organism is required with this options.
+    --corelist               Path to a list of organism to consider for core genes.
+    --coreunwanted           Specify the maximal number of organism outside of corelist to consider an OGs as core; default = 0
+    --coreminfunctionalindex Specify the minimal anvio functional index to consider an OGs as core; default = 0.8
+    --coremingeometricindex  Specify the minimal anvio geometric index to consider an OGs as core; default = 0.8
+    --specific               Extract specific gene. Default = no.
+                             A list of organism is required with this options.
+    --specificlist           Path to a list of organism to consider for specific genes.
+    --progigalProcedure      Select procedure of prodigal, meta or single, default = single
     --taxdump 		         Path to taxdump directory - automatic setup by default
-    --cpu                   Number of cpu to use. Default = 1.  
-    --COG                   Path to COG as setup by anvio, default = none                                  
+    --cpu                    Number of cpu to use. Default = 1.  
+    --COG                    Path to COG as setup by anvio, default = none                                  
 
     """.stripIndent()
     
@@ -100,7 +103,16 @@ params.core = 'no'
 //Path to core list
 params.corelist = 'none'
 
-//core
+//core unwanted
+params.coreunwanted = '0'
+
+//core coreminfunctionalindex
+params.coreminfunctionalindex = '0.8'
+
+//core coremaxgeometricindex
+params.coremingeometricindex = '0.8'
+
+//specific
 params.specific = 'no'
 
 //Path to list
@@ -136,7 +148,7 @@ params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
 params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.5'
+params.version = '2.0.6'
 
 /*
 CORE PROGRAM
@@ -541,11 +553,15 @@ process core {
     file 'list' from corelist_ch
     val companion from params.companion
     val anvioOGsfiltration from params.anvioOGsfiltration
+    val coreunwanted from params.coreunwanted 
+    val coreminfunctionalindex from params.coreminfunctionalindex
+    val coremingeometricindex from params.coremingeometricindex
     file "GENERA-SGC.log" from log_ch5
 
     output:
     file 'core-OG.list' into coreOGlist_ch
     file 'CORE' into core_ch
+    file 'Redo' into redo1_ch
     file "GENERA-SGC.log" into log_ch6
 
 
@@ -558,17 +574,19 @@ process core {
                 """
                 mkdir OG-anvio
                 mkdir OG-BMC
+                mkdir Redo
                 cp ORTHO/*BMC_OG.fasta OG-BMC/
                 cp ORTHO/*OG.fasta OG-anvio/
                 cp ANVIO/PAN_gene_clusters_summary.txt.gz OG-anvio/
                 cp ANVIO/homogeneity.txt OG-anvio/
+                cp OG-anvio/* Redo/
                 #Anvio don't keep word after points, do the same thing in the list
                 cut -f1 -d"." list > corelist
                 cd OG-anvio/
                 rm -rf *BMC*
                 gunzip PAN_gene_clusters_summary.txt.gz
-                $anvioOGsfiltration ../corelist --pfilter=yes --fraction=1 --unwanted=0 --cfilter=yes --maxcopy=1 \
-                --hfilter=yes --hindex=homogeneity.txt --maxfunctionalindex=0.8 --maxgeometricindex=0.8 \
+                $anvioOGsfiltration ../corelist --pfilter=yes --fraction=1 --unwanted=$coreunwanted --cfilter=yes --maxcopy=1 \
+                --hfilter=yes --hindex=homogeneity.txt --maxfunctionalindex=$coreminfunctionalindex --maxgeometricindex=$coremingeometricindex \
                 --cogtable=PAN_gene_clusters_summary.txt
                 cd ../
                 mkdir CORE
@@ -585,16 +603,19 @@ process core {
                 """
                 mkdir OG-anvio
                 mkdir OG-BMC
+                mkdir Redo
                 cp ORTHO/*BMC_OG.fasta OG-BMC/
                 cp ORTHO/*OG.fasta OG-anvio/
-                cp ORTHO/PAN_gene_clusters_summary.txt OG-anvio/
+                cp ORTHO/PAN_gene_clusters_summary.txt.gz OG-anvio/
                 cp ORTHO/homogeneity.txt OG-anvio/
+                cp OG-anvio/* Redo/
                 #Anvio don't keep word after points, do the same thing in the list
                 cut -f1 -d"." list > corelist
                 cd OG-anvio/
                 rm -rf *BMC*
-                $anvioOGsfiltration ../corelist --pfilter=yes --fraction=1 --unwanted=0 --cfilter=yes --maxcopy=1 \
-                --hfilter=yes --hindex=homogeneity.txt --maxfunctionalindex=0.8 --maxgeometricindex=0.8 \
+                gunzip PAN_gene_clusters_summary.txt.gz
+                $anvioOGsfiltration ../corelist --pfilter=yes --fraction=1 --unwanted=$coreunwanted --cfilter=yes --maxcopy=1 \
+                --hfilter=yes --hindex=homogeneity.txt --maxfunctionalindex=$coreminfunctionalindex --maxgeometricindex=$coremingeometricindex \
                 --cogtable=PAN_gene_clusters_summary.txt
                 cd ../
                 mkdir CORE
@@ -613,9 +634,11 @@ process core {
                 """
                 mkdir CORE
                 mkdir OG-BMC/
+                mkdir Redo/
                 cp ORTHO/*.fa OG-BMC/
+                cp OG-BMC/* Redo/
                 cd OG-BMC/
-                $companion ../list --unwanted=0
+                $companion ../list --unwanted=$coreunwanted
                 cd ../
                 mv OG-BMC/core-OG.list .
                 sed -i -e 's/.fa//g' core-OG.list
@@ -630,9 +653,11 @@ process core {
                 """
                 mkdir CORE
                 mkdir OG-BMC/
+                mkdir Redo/
                 cp ORTHO/*.fa OG-BMC/
+                cp OG-BMC/* Redo/
                 cd OG-BMC/
-                $companion ../list --unwanted=0
+                $companion ../list --unwanted=$coreunwanted
                 cd ../
                 mv OG-BMC/core-OG.list .
                 sed -i -e 's/.fa//g' core-OG.list
@@ -648,8 +673,10 @@ process core {
         println "GENERA info: core gene option not activated"
         """
         mkdir CORE
+        mkdir REDO
         echo "GENERA info: core gene option not activate" > core-OG.list
         echo "GENERA info: core gene option not activated" >> CORE/info
+        echo "GENERA info: core gene option not activated: REDO option available only after core genes" >> REDO/info
         echo "GENERA info: core gene option not activated" >> GENERA-SGC.log  
         """
     }
@@ -960,6 +987,7 @@ process publicationResults {
     file 'verified-specific.list' from enrichedlist_ch
     file 'ANVIO-files' from anviofiles_ch
     file 'OG-BMC' from ogbmc_ch
+    file 'Redo' from redo1_ch
     val version from params.version
     file "GENERA-SGC.log" from log_ch9
 
@@ -969,6 +997,7 @@ process publicationResults {
     file 'ANVIO_pangenomic-files' into specificfiltFINAL_ch
     file 'final-specific.list' into finalspecific_ch
     file 'Orthologous' into orthoSeqFINAL_ch2
+    file 'REDO' into redoFINAL_ch
     file "GENERA-Orthology.log" into logFINAL_ch
 
     //script
@@ -985,6 +1014,9 @@ process publicationResults {
     #Orthologous
     mkdir Orthologous
     mv OG-BMC/* Orthologous/
+    #Redo
+    mkdir REDO
+    mv Redo/* REDO/
     #Log
     cp GENERA-SGC.log GENERA-Orthology.log
     echo VERSION: >> GENERA-Orthology.log

@@ -501,7 +501,7 @@ process GetProt {
         #log part
         echo "Prot download NOT activated" > Genome-downloader.log
         mkdir PROT
-        echo "Prot download NOT activated" PROT/info.faa
+        echo "Prot download NOT activated" > PROT/info.faa
         """
 
     }
