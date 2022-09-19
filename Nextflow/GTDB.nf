@@ -34,6 +34,7 @@ def helpMessage() {
 
     Optional arguments:
     --cpu                    number of cpus to use, default = 1
+    --database               GTDBTK_DATA_PATH, defaukt =/scratch/ulg/GENERA/Databases/GTDB/release207/
 
     """.stripIndent()
     
