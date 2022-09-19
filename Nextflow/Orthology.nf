@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.6 
+    Version: 2.0.7
     
     Citation:
     Please cite : 
@@ -45,6 +45,7 @@ def helpMessage() {
                              A list of organism is required with this options.
     --corelist               Path to a list of organism to consider for core genes.
     --coreunwanted           Specify the maximal number of organism outside of corelist to consider an OGs as core; default = 0
+    --corepresence           Specify the precentage for core presence (all genomes present in OGs = 100), default = 100 (currenlty only for OrthoFinder)
     --coreminfunctionalindex Specify the minimal anvio functional index to consider an OGs as core; default = 0.8
     --coremingeometricindex  Specify the minimal anvio geometric index to consider an OGs as core; default = 0.8
     --specific               Extract specific gene. Default = no.
@@ -106,6 +107,9 @@ params.corelist = 'none'
 //core unwanted
 params.coreunwanted = '0'
 
+//core presence 
+params.corepresence = '100'
+
 //core coreminfunctionalindex
 params.coreminfunctionalindex = '0.8'
 
@@ -148,7 +152,7 @@ params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
 params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.6'
+params.version = '2.0.7'
 
 /*
 CORE PROGRAM
@@ -554,6 +558,7 @@ process core {
     val companion from params.companion
     val anvioOGsfiltration from params.anvioOGsfiltration
     val coreunwanted from params.coreunwanted 
+    val presence from params.corepresence
     val coreminfunctionalindex from params.coreminfunctionalindex
     val coremingeometricindex from params.coremingeometricindex
     file "GENERA-SGC.log" from log_ch5
@@ -638,7 +643,7 @@ process core {
                 cp ORTHO/*.fa OG-BMC/
                 cp OG-BMC/* Redo/
                 cd OG-BMC/
-                $companion ../list --unwanted=$coreunwanted
+                $companion ../list --unwanted=$coreunwanted --presence=$presence
                 cd ../
                 mv OG-BMC/core-OG.list .
                 sed -i -e 's/.fa//g' core-OG.list
@@ -657,7 +662,7 @@ process core {
                 cp ORTHO/*.fa OG-BMC/
                 cp OG-BMC/* Redo/
                 cd OG-BMC/
-                $companion ../list --unwanted=$coreunwanted
+                $companion ../list --unwanted=$coreunwanted --presence=$presence
                 cd ../
                 mv OG-BMC/core-OG.list .
                 sed -i -e 's/.fa//g' core-OG.list

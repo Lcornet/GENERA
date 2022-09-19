@@ -22,7 +22,7 @@ def helpMessage() {
     Description:
     This tool allows to assembly short reads (Illumina) or long reads (Pb/ONT).
     Assembly.nf works for metagenomes or classical assembly.
-    Version: 1.0.0 
+    Version: 2.0.0 
     
     Citation:
     Please cite : 
@@ -41,10 +41,12 @@ def helpMessage() {
     --ontreads                Path to Nanopore long reads, fastq
     --pbreads                 Path to Pacbio long reads, fastq
     --genomeSIZE              Size of the expected genome, mandatory for long reads assembler. (m or gb)
+    --shortreadassembler      Specify which tool to use, SPAdes or MEGAHIT, default = SPAdes
     --longreadassembler       Specify which tool to use, CANU or Flye, default = Flye
     --metagenome              metagenome assembly, not activated by default - yes or no.
-                              the assembly will be done by metaSPAdes if only illumina short reads are provided
+                              the assembly will be done by metaSPAdes or MEGAHIT if only illumina short reads are provided
                               if long reads are provided, metaFlye will be used.
+    --megahitmeta             Specify the metagenomic preset of MEGAHIT, sensitive or meta-large, default = large
     --binner                  Specify which tool to use for binning, metabat or concoct or all,  default = none
     --ragtag                  activate ragat scaffold to map your assembly according to a reference genome (to provide), yes or no, default = no
     --refgenome               reference genome used by ragtag, mandatory with ragtag, default = none
@@ -97,8 +99,14 @@ params.RAM = '280'
 //Genome size: Mandatory if Long reads
 params.genomeSIZE = '0'
 
+//short read assembled
+params.shortreadassembler = 'SPAdes'
+
 //Long read assembler
 params.longreadassembler= 'Flye'
+
+//MEGAHIT preset
+params.megahitmeta = 'large'
 
 //binning tool
 params.binner = 'none'
@@ -116,7 +124,7 @@ params.outdir='GENERA-assembly'
 params.companion = '/opt/companion/Assembly_companion.py'
 
 //version
-params.version = '1.0.0'
+params.version = '2.0.0'
 
 /*
 CORE PROGRAM
@@ -179,7 +187,7 @@ process shortreadsassembly {
     file "GENERA-Assembler.log" from log_ch1
 
     output:
-    file 'SPADES_scaffolds.fasta' into spades_ch1
+    file 'SR_assembly.fasta' into shortAssembly_ch1
     file "GENERA-Assembler.log" into log_ch2
     
     //script
@@ -187,32 +195,62 @@ process shortreadsassembly {
     if (params.ontreads != 'no'){
         println "GENERA info: ONT reads provided, skipping SPAdes"
         """
-        echo "GENERA info: ONT reads provided, skipping SPAdes" > SPADES_scaffolds.fasta
+        echo "GENERA info: ONT reads provided, skipping SPAdes" > SR_assembly.fasta
         echo "GENERA info: ONT reads provided, skipping SPAdes" >> GENERA-Assembler.log
         """
     }
     else if (params.pbreads != 'no'){
-    println "GENERA info: Pacbio reads provided, skipping SPAdes"
+        println "GENERA info: Pacbio reads provided, skipping SPAdes"
         """
-        echo "GENERA info: Pacbio reads provided, skipping SPAdes" > SPADES_scaffolds.fasta
+        echo "GENERA info: Pacbio reads provided, skipping SPAdes" > SR_assembly.fasta
         echo "GENERA info: Pacbio reads provided, skipping SPAdes" >> GENERA-Assembler.log
         """
     }
     else if (params.metagenome == 'yes'){
-    println "GENERA info: metagenome for short reads activated, Assembly will be done with SPAdes"
-        """
-        spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R2-fastp.fastq` --meta -t $cpu -m $ram -o SPADES
-        cp SPADES/scaffolds.fasta SPADES_scaffolds.fasta
-        echo "GENERA info: metagenome for short reads activated, Assembly will be done with SPAdes" >> GENERA-Assembler.log
-        """
+        if (params.shortreadassembler == 'SPAdes') {
+            println "GENERA info: metagenome for short reads activated, Assembly will be done with SPAdes"
+            """
+            spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R2-fastp.fastq` --meta -t $cpu -m $ram -o SPADES
+            cp SPADES/scaffolds.fasta SR_assembly.fasta
+            echo "GENERA info: metagenome for short reads activated, Assembly will be done with SPAdes" >> GENERA-Assembler.log
+            """
+        }
+        else if (params.shortreadassembler == 'MEGAHIT') {
+            if (params.megahitmeta == 'large') {
+                println "GENERA info: metagenome for short reads activated, Assembly will be done with MEGAHIT, meta-large option"
+                """
+                megahit -1 R1-fastp.fastq -2 R2-fastp.fastq --presets meta-large -t $cpu -o MEGAHIT
+                cp MEGAHIT/final.contigs.fa SR_assembly.fasta
+                echo "GENERA info: metagenome for short reads activated, Assembly will be done with MEGAHIT, meta-large option" >> GENERA-Assembler.log
+                """
+            }
+            else if (params.megahitmeta == 'sensitive') {
+                println "GENERA info: metagenome for short reads activated, Assembly will be done with MEGAHIT, meta-sensitive option"
+                """
+                megahit -1 R1-fastp.fastq -2 R2-fastp.fastq --presets meta-sensitive -t $cpu -o MEGAHIT
+                cp MEGAHIT/final.contigs.fa SR_assembly.fasta
+                echo "GENERA info: metagenome for short reads activated, Assembly will be done with MEGAHIT, meta-sensitive option" >> GENERA-Assembler.log
+                """
+            }
+        }
     }
     else{
-    println "GENERA info: Assembly will be done with SPAdes"
-        """
-        spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R2-fastp.fastq` -t $cpu -m $ram -o SPADES
-        cp SPADES/scaffolds.fasta SPADES_scaffolds.fasta
-        echo "GENERA info: Assembly will be done with SPAdes" >> GENERA-Assembler.log
-        """  
+        if (params.shortreadassembler == 'SPAdes') {
+            println "GENERA info: Assembly will be done with SPAdes"
+            """
+            spades.py --pe1-1 `ls R1-fastp.fastq` --pe1-2 `ls R2-fastp.fastq` -t $cpu -m $ram -o SPADES
+            cp SPADES/scaffolds.fasta SR_assembly.fasta
+            echo "GENERA info: Assembly will be done with SPAdes" >> GENERA-Assembler.log
+            """  
+        }
+        else if (params.shortreadassembler == 'MEGAHIT') {
+            println "GENERA info: Assembly will be done with MEGAHIT"
+            """
+            megahit -1 R1-fastp.fastq -2 R2-fastp.fastq -o MEGAHIT -t $cpu
+            cp MEGAHIT/final.contigs.fa SR_assembly.fasta
+            echo "GENERA info: metagenome for short reads activated, Assembly will be done with MEGAHIT" >> GENERA-Assembler.log
+            """
+        }
     }  
 }
 
@@ -333,7 +371,7 @@ process polishing {
 
 	//input output
     input:
-    file 'SPADES_scaffolds.fasta' from spades_ch1
+    file 'SR_assembly.fasta' from shortAssembly_ch1
     file "LR_assembly.fasta" from lr_ch1
     file "R1-fastp.fastq" from fastpR1_ch2
     file "R2-fastp.fastq" from fastpR2_ch2
@@ -378,7 +416,7 @@ process polishing {
     else {
         println "GENERA info: No Long reads assembly detected, skipping polishing"
         """
-        mv SPADES_scaffolds.fasta assembly_final.fasta
+        mv SR_assembly.fasta assembly_final.fasta
         echo "GENERA info: No Long reads assembly detected, skipping polishing" >> GENERA-Assembler.log
         """       
     }

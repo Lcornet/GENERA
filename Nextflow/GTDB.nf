@@ -59,6 +59,9 @@ if (params.genome == null) {
 //cpu
 params.cpu = '1'
 
+//GTDBTK_DATA_PATH=/scratch/ulg/GENERA/Databases/GTDB/release207/
+params.database='/scratch/ulg/GENERA/Databases/GTDB/release207/'
+
 //outdir
 params.outdir='GENERA_GTDB'
 
@@ -81,6 +84,7 @@ process gtdb {
     input:
     file '*' from genome_ch
     val cpu from params.cpu
+    val database from params.database
 
     output:
     file 'classify' into gtdb_ch1
@@ -90,7 +94,8 @@ process gtdb {
     """
     mkdir GEN/
     cp genome/*.fna GEN/
-    export GTDBTK_DATA_PATH=/scratch/ulg/GENERA/Databases/GTDB/release207/
+    #export GTDBTK_DATA_PATH=/scratch/ulg/GENERA/Databases/GTDB/release207/
+    export GTDBTK_DATA_PATH=$database
     gtdbtk classify_wf --genome_dir GEN --out_dir classify_out -x fna --cpus $cpu
     mkdir classify
     cp classify_out/*.tsv classify/

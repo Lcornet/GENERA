@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.1.0 
+    Version: 1.2.0 
 
     Usage:
     
@@ -31,9 +31,11 @@ def helpMessage() {
     
     Mandatory arguments:
     --genome                 Specify the path to genome directory (ext = .fna)
+    --list                   Specify the order of organism for the heatmap.
 
     Optional arguments:
-    --list                   Specify the order of organism for the heatmap.
+    --mode                   Specifiy the mode, onetomany or manytomany, default == manytomany
+    --shortlist              Specify the list of query genomes for onetomany mode
     --cpu                    number of cpus to use, default = 1
 
     """.stripIndent()
@@ -57,11 +59,20 @@ if (params.genome == null) {
 	exit 1, "Specify the path to genome directory (ext = .fna)"
 }
 
+//Path to OGs : Mandatory
+params.list = null
+if (params.list == null) {
+	exit 1, "Specify the order of organism for the heatmap."
+}
+
+//mode
+params.mode = 'manytomany'
+
+//short list
+params.shortlist = 'none'
+
 //cpu
 params.cpu = '1'
-
-//list
-params.list = 'none'
 
 //outdir
 params.outdir='GENERA_ANI'
@@ -79,6 +90,8 @@ CORE PROGRAM
 //Load input files
 genome_ch = Channel.fromPath(params.genome)
 list_ch = Channel.fromPath(params.list)
+shortlist_ch1 = Channel.fromPath(params.shortlist)
+shortlist_ch2 = Channel.fromPath(params.shortlist)
 
 //BMC names format
 process ANI {
@@ -87,6 +100,7 @@ process ANI {
 	//input output
     input:
     file '*' from genome_ch
+    file 'shortlist' from shortlist_ch1
     val cpu from params.cpu
 
     output:
@@ -95,16 +109,32 @@ process ANI {
 
     //script
     script:
-    println "GENERA info: running fastANI"
-    """
-    mkdir GEN
-    cp genome/* GEN/
-    cd GEN/
-    find *.fna > list
-    fastANI --ql list --rl list -o ANI -t $cpu --matrix
-    cd ../
-    cp GEN/ANI ANI.txt 
-    """
+    if (params.mode == 'onetomany') {
+        println "GENERA info: running fastANI"
+        """
+        mkdir GEN
+        cp genome/* GEN/
+        cd GEN/
+        find *.fna > list
+        cp ../shortlist .
+        for f in `cat shortlist`; do fastANI -q \$f.fna --rl list -o ANI-\$f -t $cpu --matrix; done
+        rm -f *.matrix
+        cd ../
+        cat GEN/ANI* > ANI.txt 
+        """
+    }
+    else if (params.mode == 'manytomany') {
+        println "GENERA info: running fastANI"
+        """
+        mkdir GEN
+        cp genome/* GEN/
+        cd GEN/
+        find *.fna > list
+        fastANI --ql list --rl list -o ANI -t $cpu --matrix
+        cd ../
+        cp GEN/ANI ANI.txt 
+        """
+    }
 }
 
 //modellling plots
@@ -115,6 +145,7 @@ process heatmap {
     input:
     file 'ANI.txt' from file_ch1
     file 'list' from list_ch
+    file 'shortlist' from shortlist_ch2
     val companion from params.companion
 
     output:
@@ -129,10 +160,21 @@ process heatmap {
         echo "GENERA info: a list of file should be provided" >> GENERA-METABO.log
         """
     }
-    else {
-        println "GENERA info: heatmap"
+    else if (params.mode == 'onetomany') {
+        println "GENERA info: heatmap onetomany mode"
         """
-        $companion ANI.txt
+        $companion ANI.txt --mode=onetomany
+        #Don't run R in onetomany mode, jusr closest list
+        echo "onetomany mode" > ANI.pdf
+        #close part
+        mkdir ANI-close
+        mv *closest* ANI-close/
+        """        
+    }
+    else {
+        println "GENERA info: heatmap, manytomany mode"
+        """
+        $companion ANI.txt --mode=manytomany
         #run R
         cp list finallist
         echo "GENOME" > head
@@ -140,6 +182,7 @@ process heatmap {
         tpage --define file=ANI /opt/code-ANI.tt > code.r
         Rscript code.r
         mv code.r ANI-code.r
+        #close part
         mkdir ANI-close
         mv *closest* ANI-close/
         """

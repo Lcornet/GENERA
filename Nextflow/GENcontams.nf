@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.0 
+    Version: 3.0.0 
 
     Usage:
     
@@ -45,6 +45,8 @@ def helpMessage() {
     --krakencontamination    Final list: Maximum Kraken contamination, default = 100 (unactivated by default)
     --bucompleteness         Final list: Minimum BUSCO completeness, default = 0 (unactivated by default)
     --budups                 Final list: Maximum BUSCO duplication, default = 100 (unactivated by default)
+    --ck2completeness        Final list: Minimum CheckM2 completeness, default = 95
+    --ck2contamination       Final list: Maximum CheckM2 contamination, default = 5
     --numcontigs             Final list: Maximum Number of contigs, default = 1000
     --ext                    Specify the extention of genomes, fna or fa or fasta, default = fna
     --dbdir                  Path to GENERA-DB directory, automatic setup by default
@@ -80,7 +82,7 @@ params.ext = 'fna'
 //DB dir
 params.dbdir = 'local'
 //Path to db dir
-dbdirectory = "$workflow.projectDir" + '/GENERA-DB-bak'
+dbdirectory = "$workflow.projectDir" + '/GENERA-DB'
 workingdb = file(dbdirectory)
 
 //Path to taxdump
@@ -118,6 +120,12 @@ params.bucompleteness = '0'
 //budups
 params.budups = '100'
 
+//CK2 compl
+params.ck2completeness = '95'
+
+//CK2 conta
+params.ck2contamination = '5'
+
 //numcontigs
 params.numcontigs = '1000'
 
@@ -137,7 +145,7 @@ params.outdir='GENERA-contams'
 params.companion = '/opt/companion/Contams_companion.py'
 
 //version
-params.version = '2.0.0'
+params.version = '3.0.0'
 
 /*
 CORE PROGRAM
@@ -149,7 +157,6 @@ genomes_ch = Channel.fromPath(params.genomes)
 dbdir_ch1 = Channel.fromPath(params.dbdir)
 dbdir_ch2 = Channel.fromPath(params.dbdir)
 dbdir_ch3 = Channel.fromPath(params.dbdir)
-
 
 //NCBI Taxonomy, set taxdump if not specifed
 process taxonomy {
@@ -208,7 +215,6 @@ process taxonomy {
     }
 }
 
-
 //Download DB
 process DBSetUp {
 	//informations
@@ -256,13 +262,19 @@ process DBSetUp {
             mv Cornet-2022-GBIO-Figshare/life-tqmd-of73* $workingdb/Physeter/
             mv Cornet-2022-GBIO-Figshare/contam-labels.idl $workingdb/Physeter/
 
-            #Set up BUSCO DB
-            busco --download all
-            mv busco_downloads/ $workingdb/
-
             #kraken
             #kraken2-build --download-library bacteria --db Kbact
             #kraken2-build --build --db Kbact --threads=20
+            wget https://genome-idx.s3.amazonaws.com/kraken/k2_pluspfp_20220607.tar.gz
+            tar -xzf k2_pluspfp_20220607.tar.gz
+            mkdir $workingdb/Kraken
+            mv *.k2d $workingdb/Kraken/
+            mv seqid2taxid.map $workingdb/Kraken/
+            mv *kmer_distrib $workingdb/Kraken/
+
+            #Set up BUSCO DB
+            busco --download all
+            mv busco_downloads/ $workingdb/
 
             #DB done
             echo "GENERA info: DB done" >> GENERA-contams.log
@@ -376,6 +388,7 @@ process format {
     file 'GENOMES/' into genomes_ch4
     file 'GENOMES/' into genomes_ch5
     file 'GENOMES/' into genomes_ch6
+    file 'GENOMES/' into genomes_ch7
     file 'SPLIT/' into split_ch1
     file 'SPLIT/' into split_ch2
     file 'GENERA-contams.log' into log_ch2
@@ -615,7 +628,7 @@ process physeter {
     if (params.mode == 'physeter') {
         """
         #labeller
-        grep genus $taxdir/nodes.dmp | cut -f1 > genus.taxid
+        grep species $taxdir/nodes.dmp | cut -f1 > genus.taxid
         /opt/create-labeler.pl genus.taxid --taxdir=$taxdir --level=$taxlevel --kingdoms=Bacteria Archaea Eukaryota > file.idl
 
         mkdir GEN
@@ -643,7 +656,7 @@ process physeter {
     else if (params.mode == 'all') {
         """
         #labeller
-        grep genus $taxdir/nodes.dmp | cut -f1 > genus.taxid
+        grep species $taxdir/nodes.dmp | cut -f1 > genus.taxid
         /opt/create-labeler.pl genus.taxid --taxdir=$taxdir --level=$taxlevel --kingdoms=Bacteria Archaea Eukaryota > file.idl
 
         mkdir GEN
@@ -700,7 +713,7 @@ process kraken {
     if (params.mode == 'kraken') {
         """
         #labeller
-        grep genus $taxdir/nodes.dmp | cut -f1 > genus.taxid
+        grep species $taxdir/nodes.dmp | cut -f1 > genus.taxid
         /opt/create-labeler.pl genus.taxid --taxdir=$taxdir --level=$taxlevel --kingdoms=Bacteria Archaea Eukaryota > file.idl
 
         mkdir GEN
@@ -728,7 +741,7 @@ process kraken {
     else if (params.mode == 'all') {
         """
         #labeller
-        grep genus $taxdir/nodes.dmp | cut -f1 > genus.taxid
+        grep species $taxdir/nodes.dmp | cut -f1 > genus.taxid
         /opt/create-labeler.pl genus.taxid --taxdir=$taxdir --level=$taxlevel --kingdoms=Bacteria Archaea Eukaryota > file.idl
 
         mkdir GEN
@@ -868,6 +881,50 @@ process eukcc {
     }
 }
 
+//checkm2
+process checkm2 {
+	//informations
+
+	//input output
+    input:
+    file '*' from genomes_ch6
+    val cpu from params.cpu
+    file 'GENERA-contams.log' from log_ch9
+
+    output:
+    file 'quality_report.tsv' into checkm2_ch
+    file 'GENERA-contams.log' into log_ch10
+
+    //script
+    script:
+    if (params.mode == 'checkm2') {
+        """
+        mkdir bins/
+        cp GENOMES/* bins/
+        #Run checkm2
+        checkm2 predict --threads $cpu --input bins/ --output-directory CHECKM2
+        cp CHECKM2/quality_report.tsv .
+        echo "GENERA info: run checkm2" >> GENERA-contams.log
+        """
+    }
+    else if (params.mode == 'all') {
+        """
+        mkdir bins/
+        cp GENOMES/* bins/
+        #Run checkm2
+        checkm2 predict --threads $cpu --input bins/ --allmodels --output-directory CHECKM2
+        cp CHECKM2/quality_report.tsv .
+        echo "GENERA info: run checkm2" >> GENERA-contams.log
+        """
+    }
+    else {
+        """
+        echo "GENERA info: checkm2 not activated" > quality_report.tsv
+        echo "GENERA info: checkm2 not activated" >> GENERA-contams.log
+        """
+    }
+}
+
 //output the results
 process publicationResults {
 	//informations
@@ -875,7 +932,7 @@ process publicationResults {
 
 	//input output
     input:
-    file 'GENOMES/' from genomes_ch6
+    file 'GENOMES/' from genomes_ch7
     file 'results.Checkm' from checkm_ch1
     file 'GUNC.progenomes_2.1.maxCSS_level.tsv' from gunc_ch1
     file 'batch_summary.txt*' from busco_ch1
@@ -884,7 +941,8 @@ process publicationResults {
     file 'Kraken.report' from kraken_ch2
     file 'quast.report' from quast_ch1
     file 'outfolder' from eukcc_ch1
-    file 'GENERA-contams.log' from log_ch9
+    file 'quality_report.tsv' from checkm2_ch
+    file 'GENERA-contams.log' from log_ch10
     val companion from params.companion
     val ckcompleteness from params.ckcompleteness
     val ckcontamination from params.ckcontamination
@@ -894,6 +952,8 @@ process publicationResults {
     val krakencontamination from params.krakencontamination 
     val bucompleteness from params.bucompleteness
     val budups from params.budups
+    val ck2completeness from params.ck2completeness
+    val ck2contamination from params.ck2contamination
     val numcontigs from params.numcontigs
     val version from params.version
 
@@ -909,16 +969,17 @@ process publicationResults {
     file 'Kraken.results' into  krakenRfinal_ch
     file 'Eukccc-results' into eukccfinal_ch
     file 'eukcc.results' into eukccRfinal_ch
+    file 'Checkm2.results' into checkm2final_ch
     file 'Quast.results' into quastfinal_ch
 
     //script
     script:
     if (params.mode == 'all') {
         """
-        deactivate final table because of busco
-        #$companion results.Checkm --mode=table --ckcompleteness=$ckcompleteness --ckcontamination=$ckcontamination \
-        #--gunccss=$gunccss --guncrrs=$guncrrs --physetercontamination=$physetercontamination \
-        #--krakencontamination=$krakencontamination --bucompleteness=$bucompleteness --budups=$budups --numcontigs=$numcontigs
+        $companion results.Checkm --mode=table --ckcompleteness=$ckcompleteness --ckcontamination=$ckcontamination \
+        --gunccss=$gunccss --guncrrs=$guncrrs --physetercontamination=$physetercontamination \
+        --krakencontamination=$krakencontamination --bucompleteness=$bucompleteness --budups=$budups --numcontigs=$numcontigs \
+        --ck2completeness=$ck2completeness --ck2contamination=$ck2contamination
         cp results.Checkm Checkm.results
         cp GUNC.progenomes_2.1.maxCSS_level.tsv GUNC.results
         cp batch_summary.txt* Busco.results
@@ -930,6 +991,7 @@ process publicationResults {
         mkdir Eukccc-results/
         cp outfolder/eukcc.csv eukcc.results
         cp -r outfolder/* Eukccc-results/
+        cp quality_report.tsv Checkm2.results 
         echo "GENERA info: making final table" >> GENERA-contams.log
         echo "Version:" >> GENERA-contams.log
         echo $version >> GENERA-contams.log
@@ -950,6 +1012,7 @@ process publicationResults {
         mkdir Eukccc-results/
         cp outfolder/eukcc.csv eukcc.results
         cp -r outfolder/* Eukccc-results/
+        cp quality_report.tsv Checkm2.results
         echo "GENERA info: not All mode, no final table or positive list" >> GENERA-contams.log
         echo "Version:" >> GENERA-contams.log
         echo $version >> GENERA-contams.log
