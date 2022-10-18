@@ -10,25 +10,6 @@ https://github.com/Lcornet/GENERA/wiki
 Please visit  
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
 
-# NEWS
-20/05 !!!  BUSCO is now available in GENcontam, from all and busco mode !!!   
-16/05 !!!  EukCC has been added to GENcontams tool version 2.0.0, can be used as an alternative to BUSCO !!!   
-11/05 !!!  BUSCO is temporarily disabled from GENcontams du to permission issue, see issue 23 for info !!!   
-10/05 !!!  Braker has been added to Annotation tool !!!   
-05/05 !!!  The Training is available online: https://www.youtube.com/watch?v=bfqSl9Mi8eA !!!  
-03/05 !!!  Genome-downloader version 3.0.0 is now available: donwload of proteomes + genomes !!!    
-19/04 !!!  Genomic contamination estimation has been added to GENERA tools !!!  
-19/04 !!!  Single locus Maximum Likelihood Phylogeny has been added to GENERA tools !!!  
-14/04 !!!  Genome-downloader version 2.0.1 is now available: abbr mode is now optional !!!  
-13/04 !!!  Average Nucleotide Identity has been added to GENERA tools !!!
-12/04 !!!  GTDB has been added to GENERA tools !!!  
-08/04 !!!  Metabolic has been added to GENERA tools !!!  
-01/04 !!!  Orthology version 2.0.0 is now available: Specific gene analysis available, nucleotide mode available !!!  
-20/03 !!!  Genome-downloader version 2.0.0 is now available: Dereplication of genomes and species level are available !!!  
-10/02 !!!  OGs enrichment has been added to GENERA tools !!!  
-03/02 !!!  OGs DNA reverse translate has been added to GENERA tools !!!  
-28/01 !!!  Multi locus Maximum Likelihood Phylogeny has been added to GENERA tools !!!
-
 # Publications
 1. ToRQuEMaDA: tool for retrieving queried Eubacteria, metadata and dereplicating assemblies.  
    Léonard, R. R., Leleu, M., Vlierberghe, M. V., Cornet, L., Kerff, F., and Baurain, D. (2021).  
