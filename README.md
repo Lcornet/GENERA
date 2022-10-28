@@ -33,6 +33,10 @@ https://bccm.belspo.be/content/bccm-collections-genomic-era
    Cornet, L & Baurain, D (2022)   
    Genome Biology. 2022;23:60.  
    https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02619-9  
+7. The GEN-ERA toolbox: unified and reproducible workflows for research in microbial genomics  
+   Cornet, L., Durieu, B., Baert, F., D’hooge, E., Colignon, D., Meunier, L., Lupo, V., Cleenwerck I.,
+   Daniel, HM., Rigouts, L., Sirjacobs, D., Declerck, D., Vandamme, P., Wilmotte, A., Baurain, D., Becker P  
+   https://www.frontiersin.org/articles/10.3389/fmicb.2019.01612/full
 
 # Copyright and License
 
