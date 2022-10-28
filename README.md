@@ -36,7 +36,7 @@ https://bccm.belspo.be/content/bccm-collections-genomic-era
 7. The GEN-ERA toolbox: unified and reproducible workflows for research in microbial genomics  
    Cornet, L., Durieu, B., Baert, F., D’hooge, E., Colignon, D., Meunier, L., Lupo, V., Cleenwerck I.,
    Daniel, HM., Rigouts, L., Sirjacobs, D., Declerck, D., Vandamme, P., Wilmotte, A., Baurain, D., Becker P  
-   https://www.frontiersin.org/articles/10.3389/fmicb.2019.01612/full
+   https://www.biorxiv.org/content/10.1101/2022.10.20.513017v1
 
 # Copyright and License
 
