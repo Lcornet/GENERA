@@ -21,6 +21,7 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     export PATH=/opt/pplacer-Linux-v1.1.alpha17:$PATH
     export PATH=/opt/metaeuk/bin:$PATH
     export PATH=/opt/OrthoFinder_source:$PATH
+    export PATH=/opt/bbmap:$PATH 
 
 %post
     # Ubuntu
@@ -54,6 +55,9 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
     export PATH=/opt/miniconda/bin:$PATH
     conda install -c bioconda python=3.7 -y
+
+    #biopython
+    pip3 install biopython
 
     #capnm module + BMC
     cpanm LWP::Simple
@@ -127,10 +131,13 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     checkm data setRoot checkm-data/
 
     #busco
-    apt install default-jre -y
     pip3 install biopython
     pip3 install pandas
     apt install augustus augustus-data augustus-doc -y
+    wget https://sourceforge.net/projects/bbmap/files/latest/download
+    mv download BBMap.tar.gz
+    tar -xvzf BBMap.tar.gz
+    apt install default-jre -y
     #metaeuk
     cd /opt/
     wget https://mmseqs.com/metaeuk/metaeuk-linux-avx2.tar.gz

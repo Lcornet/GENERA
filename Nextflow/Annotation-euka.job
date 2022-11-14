@@ -12,4 +12,9 @@ export MKL_NUM_THREADS=20
 
 rm -rf augustus-config/
 cp -r /scratch/ulg/GENERA/Databases/AMAW/augustus-config .
-singularity exec --bind /scratch/ulg/GENERA/Databases/AMAW:/temp,<FIELD1>:/mnt --contain --workdir <FIELD1> /scratch/ulg/GENERA/amaw.sif amaw.pl --genome=/mnt/<FIELD2> --organism=<FIELD3> --proteins=1 --est=1 --taxdir=/temp/taxdump/ --maker-cpus=20 --trinity-cpus=20 --rsem-cpus=20 --augustus-db=/mnt/augustus-config/ --outdir=/mnt/GENERA-annotation --prot-dbs=/temp/prot_dbs/
+mkdir NCBI
+cd NCBI
+mkdir .ncbi
+cp /scratch/ulg/GENERA/Nextflow-scripts/user-settings.mkfg .ncbi/
+cd ../
+singularity exec --bind /scratch/ulg/GENERA/Databases/AMAW:/temp,<FIELD1>/NCBI:${HOME},<FIELD1>:/mnt --contain --workdir <FIELD1> /scratch/ulg/GENERA/amaw.sif amaw.pl --genome=/mnt/<FIELD2> --organism=<FIELD3> --proteins=1 --est=1 --taxdir=/temp/taxdump/ --maker-cpus=20 --trinity-cpus=20 --rsem-cpus=20 --augustus-db=/mnt/augustus-config/ --outdir=/mnt/GENERA-annotation --prot-dbs=/temp/prot_dbs/
