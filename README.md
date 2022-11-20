@@ -6,6 +6,9 @@
 Please visit the wiki for tutorials and access to the tools:
 https://github.com/Lcornet/GENERA/wiki  
 
+# NEWS
+Mantis is now installed in a singularity container for the Metabolic workflow (install is no longer necessary).  
+
 # Information about the GEN-ERA project
 Please visit  
 https://bccm.belspo.be/content/bccm-collections-genomic-era  
@@ -35,8 +38,11 @@ https://bccm.belspo.be/content/bccm-collections-genomic-era
    https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02619-9  
 7. The GEN-ERA toolbox: unified and reproducible workflows for research in microbial genomics  
    Cornet, L., Durieu, B., Baert, F., D’hooge, E., Colignon, D., Meunier, L., Lupo, V., Cleenwerck I.,
-   Daniel, HM., Rigouts, L., Sirjacobs, D., Declerck, D., Vandamme, P., Wilmotte, A., Baurain, D., Becker P  
-   https://www.biorxiv.org/content/10.1101/2022.10.20.513017v1
+   Daniel, HM., Rigouts, L., Sirjacobs, D., Declerck, D., Vandamme, P., Wilmotte, A., Baurain, D., Becker P (2022).  
+   https://www.biorxiv.org/content/10.1101/2022.10.20.513017v1  
+8. CRitical Assessment of genomic COntamination detection at several Taxonomic ranks (CRACOT)    
+   Cornet, L., Lupo, V., Declerck, S., Baurain, D. (2022).   
+   https://www.biorxiv.org/content/10.1101/2022.11.14.516442v1  
 
 # Copyright and License
 
