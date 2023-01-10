@@ -27,13 +27,13 @@ def helpMessage() {
     
     The typical command for running the pipeline is as follows:
 
-    nextflow run GENcontams.nf --genomes=GENERA-input --mode=all --ext=fna --cpu=20
+    nextflow .... 
     
     Mandatory arguments:
     --genomes                Specify the directory with genomes, shoudl be 'GENERA-input/'
 
     Optional arguments:
-    --mode                   Specify mode, all or specific tool(checkm,gunc,physeter,kraken,busco,kraken or checkm2), default = all
+    --mode                   Specify mode, all or specific tool, default = all
     --taxlevel               Specify taxonomic level to use for Physeter/Kraken, default = phylum
     --automode               Specify methods for main organism detection in Physeter/Kraken, label_first or count_first, default = label_first
     --idl                    Path to idl file for Physeter, automatic build by default according to taxlevel option

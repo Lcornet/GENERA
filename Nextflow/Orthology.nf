@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.7
+    Version: 2.0.8
     
     Citation:
     Please cite : 
@@ -152,7 +152,7 @@ params.ftcompanion = '/opt/companion/OGsEnrichment_companion.py'
 params.changespadesids = '/opt/change-spades-IDs.py'
 
 //version
-params.version = '2.0.7'
+params.version = '2.0.8'
 
 /*
 CORE PROGRAM
@@ -388,7 +388,8 @@ process orthofinder {
             cp PSEQS/*.faa OF-indir/
             orthofinder -t $cpu -a $cpu -f OF-indir/
             mkdir OG
-            cp OF-indir/OrthoFinder/Results_*/Orthogroup_Sequences/*.fa OG/
+            #cp OF-indir/OrthoFinder/Results_*/Orthogroup_Sequences/*.fa OG/
+            for f in OF-indir/OrthoFinder/Results_*/Orthogroup_Sequences/*.fa; do cp \$f OG/; done
             echo "GENERA info: run Orthofinder" >> GENERA-SGC.log
             """
         }
@@ -640,8 +641,10 @@ process core {
                 mkdir CORE
                 mkdir OG-BMC/
                 mkdir Redo/
-                cp ORTHO/*.fa OG-BMC/
-                cp OG-BMC/* Redo/
+                #cp ORTHO/*.fa OG-BMC/
+                for f in ORTHO/*.fa; do cp \$f OG-BMC/; done
+                #cp OG-BMC/* Redo/
+                for f in OG-BMC/*; do cp \$f Redo/; done
                 cd OG-BMC/
                 $companion ../list --unwanted=$coreunwanted --presence=$presence
                 cd ../
@@ -659,8 +662,10 @@ process core {
                 mkdir CORE
                 mkdir OG-BMC/
                 mkdir Redo/
-                cp ORTHO/*.fa OG-BMC/
-                cp OG-BMC/* Redo/
+                #cp ORTHO/*.fa OG-BMC/
+                for f in ORTHO/*.fa; do cp \$f OG-BMC/; done
+                #cp OG-BMC/* Redo/
+                for f in OG-BMC/*; do cp \$f Redo/; done
                 cd OG-BMC/
                 $companion ../list --unwanted=$coreunwanted --presence=$presence
                 cd ../
