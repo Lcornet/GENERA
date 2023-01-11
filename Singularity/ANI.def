@@ -8,8 +8,8 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
 
 %environment
     export PATH=/opt/usr/local/bin:$PATH
-    export PATH=/opt/miniconda/bin:$PATH
-    . /opt/miniconda/etc/profile.d/conda.sh
+    export PATH=/opt/FastANI:$PATH
+    export PATH=/opt/Bacsort/scripts:"$PATH"
 
 %post
     # Ubuntu
@@ -38,21 +38,52 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     apt-get install libssl-dev -y
     apt-get install pdftk -y
 
-    #instal conda
-    cd /opt/
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
-    export PATH=/opt/miniconda/bin:$PATH
-    #conda install -c bioconda python=3.7 -y
-    #conda install -c bioconda mantis_pfa -y
+    #Biomust
+    #apt-get install -y libcam-pdf-perl
+    #cpanm LWP::Simple --force
+    #cpanm aliased --force
+    #cpanm Bio::MUST::Core
+    #cpanm Bio::MUST::Drivers
+    #cpanm Bio::MUST::Apps::FortyTwo
+    #cpanm Bio::MUST::Apps::Physeter
 
     #R
     apt install r-base -y
-    apt-get install -y r-cran-ggplot2 -y
+    wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+    add-apt-repository "deb https://cloud.r-project.org/bin/linux/ubuntu $(lsb_release -cs)-cran40/"
+    apt update -y
+    apt install -y --no-install-recommends r-base
+    #apt-get install -y r-cran-ggplot2 -y
     R -e 'install.packages(c("ggplot2"))'
-
+    R -e 'install.packages(c("tidyr"))'
+    R -e 'install.packages(c("ape"))'
+    R -e 'install.packages(c("phangorn"))'
     #tpage
     apt-get install libtemplate-perl -y
+
+    #Fastani
+    cd /opt/
+    apt install -y autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev
+    apt-get install -y libgsl-dev
+    git clone https://github.com/ParBLiSS/FastANI
+    cd FastANI/
+    ./bootstrap.sh
+    ./configure
+    make
+    export PATH=/opt/FastANI:$PATH
+
+    #Orthoani
+    ln -s /usr/bin/python3 /usr/bin/python
+    pip3 install orthoani
+    apt install -y ncbi-blast+
+
+    #Bacsort
+    cd /opt/
+    git clone https://github.com/rrwick/Bacsort
+    export PATH=/opt/Bacsort/scripts:"$PATH"
+
+    cd /opt/
+    git clone https://github.com/hcdenbakker/fANI2Tree
 
     #companion
     cd /opt/

@@ -26,9 +26,11 @@ from collections import defaultdict
 @click.option('--krakencontamination', default='100', help='Kraken conta')
 @click.option('--bucompleteness', default='0', help='Physeter conta')
 @click.option('--budups', default='100', help='Kraken conta')
+@click.option('--ck2completeness', default='95', help='Checkm2 compl')
+@click.option('--ck2contamination', default='5', help='Checkm2 conta')
 @click.option('--numcontigs', default='100', help='Number of contigs')
 
-def main(main_file, mode, ckcompleteness, ckcontamination, gunccss, guncrrs, physetercontamination, krakencontamination, bucompleteness, budups, numcontigs):
+def main(main_file, mode, ckcompleteness, ckcontamination, gunccss, guncrrs, physetercontamination, krakencontamination, bucompleteness, budups, ck2completeness, ck2contamination, numcontigs):
 		
 	#read fasta file
     if (mode == 'table'):
@@ -133,6 +135,21 @@ def main(main_file, mode, ckcompleteness, ckcontamination, gunccss, guncrrs, phy
                 quast_of[Genome]['GC'] = GC
                 quast_of[Genome]['N50'] = N50
         
+        #Checkm2
+        CK2file = open('quality_report.tsv')
+        for line in CK2file:
+            record = line.replace("\n", "")
+            if ('Name' in record):
+                continue
+            else:
+                split_list = record.split("\t")
+                Genome = split_list[0]
+                completeness = split_list[1]
+                conta = split_list[2]
+                contam_of[Genome]['CK2'] = conta
+                compl_of[Genome]['CK2'] = completeness  
+
+        
         #print(quast_of)
 
         #Write the table
@@ -141,6 +158,7 @@ def main(main_file, mode, ckcompleteness, ckcontamination, gunccss, guncrrs, phy
         + "\t" + 'GUNC_CSS' + "\t" + 'GUNC_RRS' + "\t" + 'GUNC_status'
         + "\t" + 'GUNC_conta' + "\t" + 'Physeter_placement' + "\t" + 'Physeter_contamination' 
         + "\t" + 'Kraken_placement' + "\t" + 'Kraken_contamination'
+        + "\t" + 'Checkm2_completeness' + "\t" + 'Checkm2_contamination'
         + "\t" + "quast_#contigs" + "\t" + 'quast_tot_length' + "\t" + 'quast_GC' + "\t" + 'quast_N50' + "\n")     
 
         for genome in contam_of:
@@ -160,6 +178,8 @@ def main(main_file, mode, ckcompleteness, ckcontamination, gunccss, guncrrs, phy
             Physeter_place = tool_of['physeter-place']
             Kraken_conta = tool_of['kraken']
             Kraken_place = tool_of['kraken-place']
+            Checkm2_conta = tool_of['CK2']
+            Checkm2_comp = compl_of[genome]['CK2']
             quast_contigs = quast_of[genome]['contigs']
             quast_length = quast_of[genome]['length']
             quast_GC = quast_of[genome]['GC']
@@ -170,6 +190,7 @@ def main(main_file, mode, ckcompleteness, ckcontamination, gunccss, guncrrs, phy
             + "\t" + str(GUNC_CSS) + "\t" + str(GUNC_RRS) + "\t" + str(GUNC_status) 
             + "\t" + str(GUNC_conta) + "\t" + str(Physeter_place) + "\t" + str(Physeter_conta) 
             + "\t" + str(Kraken_place) + "\t" + str(Kraken_conta)
+            + "\t" + str(Checkm2_comp) + "\t" + str(Checkm2_conta)
             + "\t" + str(quast_contigs) + "\t" + str(quast_length) + "\t" + str(quast_GC) + "\t" + str(quast_N50) + "\n")
 
             #print in positive list
@@ -179,7 +200,9 @@ def main(main_file, mode, ckcompleteness, ckcontamination, gunccss, guncrrs, phy
             and (float(GUNC_CSS) < float(gunccss)) and (float(GUNC_RRS) > float(guncrrs))
             and (int(quast_contigs) < float(numcontigs)) 
             and (float(Physeter_conta) < float(physetercontamination)) 
-            and (float(Kraken_conta) < float(krakencontamination))):
+            and (float(Kraken_conta) < float(krakencontamination))
+            and (float(Checkm2_conta) < float(ck2contamination))
+            and (float(Checkm2_comp) > float(ck2completeness))):
                 list_out.write(str(genome) + "\n")
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ list <- read.table("finallist", header=TRUE)
 write.csv(list,"[% file %]-list.csv", row.names = FALSE)
 orderlist = list$GENOME
 write.csv(orderlist,"[% file %]-orderlist.csv", row.names = FALSE)
-order <- transform(infile, GENOME1 = factor(GENOME1, levels = rev(orderlist)))
+order <- transform(infile, GENOME1 = factor(GENOME1, levels = rev(orderlist)), GENOME2 = factor(GENOME2, levels = rev(orderlist)))
 write.csv(order,"[% file %]-order.csv", row.names = FALSE)
 pals <- c("#e0966e","#e06e6e","#d10404","#570101","#2b0000","#1c0000","#000000")
 brk<- c(80,84,89,92,94,97,99)

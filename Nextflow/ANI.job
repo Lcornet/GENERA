@@ -11,4 +11,4 @@ export OMP_NUM_THREADS=20
 export MKL_NUM_THREADS=20
 
 module --ignore-cache load Nextflow/21.08.0
-nextflow run ANI.nf --genome=genome --list=list --cpu=20
+nextflow run ANI.nf --genome=genome --list=list --idm=file.idm --tool=fastANI --tree=no --minFraction=0.2 --cpu=20

@@ -197,7 +197,10 @@ From: omatt/default/mpi:3.1.1
     make install        
     #bamtools
     cd /usr/local/samtools/
-    git clone git://github.com/pezmaster31/bamtools.git
+    wget https://github.com/pezmaster31/bamtools/archive/refs/tags/v2.5.2.zip
+    unzip v2.5.2.zip
+    mv bamtools-2.5.2 bamtools
+    #git clone git://github.com/pezmaster31/bamtools.git
     cd bamtools
     mkdir build
     cd build
@@ -226,10 +229,10 @@ From: omatt/default/mpi:3.1.1
 
     #sratoolkit
     cd /opt/
-    wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/2.9.6/sratoolkit.2.9.6-ubuntu64.tar.gz
-    tar -xvzf sratoolkit.2.9.6-ubuntu64.tar.gz
-    mv sratoolkit.2.9.6-ubuntu64 sratoolkit
-
+    wget https://ftp-trace.ncbi.nlm.nih.gov/sra/sdk/3.0.0/sratoolkit.3.0.0-ubuntu64.tar.gz
+    tar -xvzf sratoolkit.3.0.0-ubuntu64.tar.gz
+    mv sratoolkit.3.0.0-ubuntu64 sratoolkit
+    export PATH=/opt/sratoolkit/bin:$PATH
     #RSEM
     cd /opt/
     wget https://github.com/deweylab/RSEM/archive/refs/tags/v1.2.31.tar.gz
