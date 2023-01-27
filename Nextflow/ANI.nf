@@ -278,7 +278,8 @@ process heatmap {
             mv ANI-heat.txt ANI-infile.txt
             #run R
             #cp list finallist
-            for f in `cat list`; do grep \$f file.idm | cut -f1 ; done > finallist
+            #for f in `cat list`; do grep "\b\$f\b" file.idm | cut -f1 ; done > finallist
+            $companion list --mode=list
             echo "GENOME" > head
             cat head finallist > temp; mv -f temp finallist
             tpage --define file=ANI /opt/code-ANI.tt > code.r
@@ -318,7 +319,8 @@ process heatmap {
             mv ANI-heat.txt ANI-infile.txt
             #run R
             #cp list finallist
-            for f in `cat list`; do grep \$f file.idm | cut -f1 ; done > finallist
+            #for f in `cat list`; do grep "\b\$f\b" file.idm | cut -f1 ; done > finallist
+            $companion list --mode=list
             echo "GENOME" > head
             cat head finallist > temp; mv -f temp finallist
             tpage --define file=ANI /opt/code-ANI.tt > code.r
