@@ -1,7 +1,7 @@
 
 ![pips](https://github.com/Lcornet/GENERA/blob/main/images/GENERA-pips.png)
 
-The GEN-ERA toolbox is a suite of Nextflow-Singularity workflows designed for comparative genomics of bacteria and small eukaryotes. Without any installation, it allows researchers to download, assemble and bin (meta)genomes (from short or long reads). Orthologous inference and maximum likelihood phylogenomic analyses (bootstrap and jackknife) can be inferred with this suite. Constrained (by a ribosomal phylogenomic) SSU rRNA phylogeny can also be inferred. Average nucleotide identity, GTDB identification and metabolic modelling are also included in the toolbox.  
+**The GEN-ERA toolbox is a suite of Nextflow-Singularity workflows designed for comparative genomics of bacteria and small eukaryotes. Without any installation, it allows researchers to download, assemble and bin (meta)genomes (from short or long reads). Orthologous inference and maximum likelihood phylogenomic analyses (bootstrap and jackknife) can be inferred with this suite. Constrained (by a ribosomal phylogenomic) SSU rRNA phylogeny can also be inferred. Average nucleotide identity, GTDB identification and metabolic modelling are also included in the toolbox.**  
 
 
 # BCCM GEN-ERA tools repository
