@@ -265,7 +265,7 @@ process heatmap {
             echo "onetomany mode" > ANI.pdf
             #close part
             mkdir ANI-close
-            mv *closest* ANI-close/
+            mv ./*closest* ANI-close/
             """        
         }
         else {
@@ -287,7 +287,7 @@ process heatmap {
             mv code.r ANI-code.r
             #close part
             mkdir ANI-close
-            mv *closest* ANI-close/
+            mv ./*closest* ANI-close/
             """
         }
     }
@@ -306,7 +306,7 @@ process heatmap {
             echo "onetomany mode" > ANI.pdf
             #close part
             mkdir ANI-close
-            mv *closest* ANI-close/
+            mv ./*closest* ANI-close/
             """        
         }
         else {
@@ -328,7 +328,7 @@ process heatmap {
             mv code.r ANI-code.r
             #close part
             mkdir ANI-close
-            mv *closest* ANI-close/
+            mv ./*closest* ANI-close/
             """
         }
     }
