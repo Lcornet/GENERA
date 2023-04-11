@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.3 
+    Version: 2.0.0 
     
     Citation:
     Please cite : 
@@ -100,7 +100,7 @@ params.cpu = '1'
 params.companion = '/opt/companion/Phylogeny_companion.py'
 
 //version
-params.version = '1.0.3'
+params.version = '2.0.0'
 
 /*
 CORE PROGRAM
