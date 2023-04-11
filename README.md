@@ -9,7 +9,7 @@ Please visit the wiki for tutorials and access to the tools:
 https://github.com/Lcornet/GENERA/wiki  
 
 # NEWS
-Update in Phylogeny.nf, pass on RAxMLV8. The fast method is no longue used for jackknife, pass on ML bestree.  
+Update in Phylogeny.nf, pass on RAxMLV8. The fast method is no longer used for jackknife, pass on ML bestree.  
 
 # Information about the GEN-ERA project
 Please visit  
