@@ -226,7 +226,35 @@ def main(main_file, mode, submode, anitool):
                     if (countlist == lenlist):
                         HEAT_file.write(str(field) + "\n")
                     else:
-                        HEAT_file.write(str(field) + "\t")            
+                        HEAT_file.write(str(field) + "\t") 
+
+    elif (mode == 'list'):
+
+        #Read idm file
+        idm_of = {}
+        idmfile = open('file.idm')
+        for line in idmfile:
+            if '#' in line:
+                continue
+            else:
+                record = line.replace("\n", "")
+                split_list = record.split("\t")
+                long = split_list[0]
+                short = split_list[1]
+                idm_of[short] = long
+        #Read list file
+        final_file = open('finallist', "w")
+        listfile = open('list')
+        for line in listfile:
+            record = line.replace("\n", "")
+            split_list = record.split("\t")
+            short = split_list[0]
+            long = idm_of[short]
+            final_file.write(str(long) + "\n")
+
+
+
+
 
 
 if __name__ == '__main__':

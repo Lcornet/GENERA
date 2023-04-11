@@ -3,14 +3,13 @@
 
 **The GEN-ERA toolbox is a suite of Nextflow-Singularity workflows designed for comparative genomics of bacteria and small eukaryotes. Without any installation, it allows researchers to download, assemble and bin (meta)genomes (from short or long reads). Orthologous inference and maximum likelihood phylogenomic analyses (bootstrap and jackknife) can be inferred with this suite. Constrained (by a ribosomal phylogenomic) SSU rRNA phylogeny can also be inferred. Average nucleotide identity, GTDB identification and metabolic modelling are also included in the toolbox.**  
 
-
 # BCCM GEN-ERA tools repository
 
 Please visit the wiki for tutorials and access to the tools:
 https://github.com/Lcornet/GENERA/wiki  
 
 # NEWS
-Mantis is now installed in a singularity container for the Metabolic workflow (install is no longer necessary).  
+Update in Phylogeny.nf, pass on RAxMLV8. The fast method is no longue used for jackknife, pass on ML bestree.  
 
 # Information about the GEN-ERA project
 Please visit  

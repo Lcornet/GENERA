@@ -392,6 +392,7 @@ process mlinference {
     file 'DNAclassic.tre' into mlDNAclassic_ch1
     file 'DNAtwo.tre' into mlDNAtwo_ch1
     file 'DNAthird.tre' into mlDNAthird_ch1
+    file 'SUPP/' into suppinfo_ch1
     file "GENERA-Phylogeny.log" into log_ch5
 
     //script
@@ -399,46 +400,74 @@ process mlinference {
     if (params.mode == 'prot') {
         println "GENERA info: Prot ML inference"
         """
-        ali2phylip.pl data-ass.ali --map-ids
-        raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy \
-        -n data-ass-RAXML-PROTGAMMALGF-100xRAPIDBP -m PROTGAMMALGF -N 100 -f a -x 1975021703574 -p 1975021703574
+        ali2phylip.pl data-ass.ali --map-ids 2> LOGA2P-prot
+        mv data-ass.ali data-ass.ali.bak
+        phylip2ali.pl data-ass.phy
+        ali2fasta.pl data-ass.ali
+        #raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy \
+        #-n data-ass-RAXML-PROTGAMMALGF-100xRAPIDBP -m PROTGAMMALGF -N 100 -f a -x 1975021703574 -p 1975021703574
+        raxml-ng --all --msa data-ass.fasta --msa-format FASTA --data-type AA --model LG+G4+F --prefix data-ass-RAXML-LGG4F --threads auto{$cpu} --bs-metric fbp,tbe
         #format
-        mv data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.data-ass-RAXML-PROTGAMMALGF-100xRAPIDBP --map-ids; mv RAxML_bipartitions.tre protML.tre
+        #mv data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.data-ass-RAXML-PROTGAMMALGF-100xRAPIDBP --map-ids; mv RAxML_bipartitions.tre protML.tre
+        mv data-ass.idm data-ass-RAXML-LGG4F.raxml.idm; format-tree.pl data-ass-RAXML-LGG4F.raxml.supportFBP --map-ids; mv data-ass-RAXML-LGG4F.raxml.tre protML.tre
         echo "GENERA info: ML inference" >> GENERA-Phylogeny.log
         #False file part(for DNA)
         echo 'FALSE IDM' > data-ass-blocks.idm
         echo 'FALSE DNA RAXML' > DNAclassic.tre
         echo 'FALSE DNA RAXML' > DNAtwo.tre
         echo 'FALSE DNA RAXML' > DNAthird.tre
+        #Supporting file
+        mkdir SUPP
+        mv LOGA2P* SUPP/
+        cp data-ass.ali.bak SUPP/prot-matrix-raw.ali
         """
     }
     else if (params.mode == 'DNA') {
         println "GENERA info: DNA ML inference"
         """
         #Matrix phylip convert
-        ali2phylip.pl data-ass.ali --map-ids
+        ali2phylip.pl data-ass.ali --map-ids 2> LOGA2P-DNA-class-and-third
+        mv data-ass.ali data-ass.ali.bak
+        phylip2ali.pl data-ass.phy
+        ali2fasta.pl data-ass.ali
         #RaxML
         #Without codon partition
-        raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy \
-        -n classic -m GTRGAMMA -N 100 -f a -x 1975021703574 -p 1975021703574
-        cp data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.classic --map-ids; mv RAxML_bipartitions.tre DNAclassic.tre
+        #raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy \
+        #-n classic -m GTRGAMMA -N 100 -f a -x 1975021703574 -p 1975021703574
+        #cp data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.classic --map-ids; mv RAxML_bipartitions.tre DNAclassic.tre
+        raxml-ng --all --msa data-ass.fasta --msa-format FASTA --data-type DNA --model GTR+G --prefix data-ass-RAXML-GTRG --threads auto{$cpu} --bs-metric fbp,tbe
+        cp data-ass.idm data-ass-RAXML-GTRG.raxml.idm; format-tree.pl data-ass-RAXML-GTRG.raxml.supportFBP --map-ids; mv data-ass-RAXML-GTRG.raxml.tre DNAclassic.tre
         echo "GENERA info: DNA ML inference, no partition" >> GENERA-Phylogeny.log
 
         #Two first codon only
-        $companion data-ass.phy --mode=two
+        $companion data-ass.phy --mode=two 2> LOGA2P-DNA-two
         mask-ali.pl blocks --alifile=data-ass.ali
         ali2phylip.pl data-ass-blocks.ali --map-ids
-        raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass-blocks.phy \
-        -n two -m GTRGAMMA -N 100 -f a -x 1975021703574 -p 1975021703574
-        cp data-ass-blocks.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.two --map-ids; mv RAxML_bipartitions.tre DNAtwo.tre
+        mv data-ass-blocks.ali data-ass-blocks.ali.bak
+        phylip2ali.pl data-ass-blocks.phy
+        ali2fasta.pl data-ass-blocks.ali
+        #ali2phylip.pl data-ass-blocks.ali --map-ids
+        #raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass-blocks.phy \
+        #-n two -m GTRGAMMA -N 100 -f a -x 1975021703574 -p 1975021703574
+        #cp data-ass-blocks.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.two --map-ids; mv RAxML_bipartitions.tre DNAtwo.tre
+        cp data-ass.idm data-ass-blocks.idm
+        raxml-ng --all --msa data-ass-blocks.fasta --msa-format FASTA --data-type DNA --model GTR+G --prefix data-ass-blocks-RAXML-GTRG --threads auto{$cpu} --bs-metric fbp,tbe
+        cp data-ass-blocks.idm data-ass-blocks-RAXML-GTRG.raxml.idm; format-tree.pl data-ass-blocks-RAXML-GTRG.raxml.supportFBP --map-ids; mv data-ass-blocks-RAXML-GTRG.raxml.tre DNAtwo.tre  
         echo "GENERA info: DNA ML inference, codon 1&2" >> GENERA-Phylogeny.log           
 
         #Partition on third codon
-        $companion data-ass.phy --mode=third
-        raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy -m GTRGAMMA -q partition.txt \
-        -n third -N 100 -f a -x 1975021703574 -p 1975021703574
-        cp data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.third --map-ids; mv RAxML_bipartitions.tre DNAthird.tre
+        $companion data-ass.phy --mode=third 
+        raxml-ng --all --msa data-ass.fasta --msa-format FASTA --data-type DNA --model partition.txt --prefix data-ass-third-RAXML-GTRG --threads auto{$cpu} --bs-metric fbp,tbe
+        #raxmlHPC-PTHREADS-AVX -T $cpu -s data-ass.phy -m GTRGAMMA -q partition.txt \
+        #-n third -N 100 -f a -x 1975021703574 -p 1975021703574
+        #cp data-ass.idm RAxML_bipartitions.idm; format-tree.pl RAxML_bipartitions.third --map-ids; mv RAxML_bipartitions.tre DNAthird.tre
+        cp data-ass.idm data-ass-third-RAXML-GTRG.raxml.idm; format-tree.pl data-ass-third-RAXML-GTRG.raxml.supportFBP --map-ids; mv data-ass-third-RAXML-GTRG.raxml.tre DNAthird.tre
         echo "GENERA info: DNA ML inference, third codon partition" >> GENERA-Phylogeny.log
+
+        #Supporting file
+        mkdir SUPP
+        mv LOGA2P* SUPP/
+        cp data-ass.ali.bak SUPP/dna-matrix-raw.ali
 
         #False file part(for Prot)
         echo 'FALSE PROT RAXML' > protML.tre
@@ -533,6 +562,7 @@ process jaccknifeMLinference {
     input:
     file '*' from jackkconcats_ch1
     file "GENERA-Phylogeny.log" from log_ch6
+    file 'SUPP/' from suppinfo_ch1
     val cpu from params.cpu
     val companion from params.companion
 
@@ -540,6 +570,7 @@ process jaccknifeMLinference {
     file 'trees/jackk.tre' into jackktre_ch1
     file 'trees/jackk-two.tre' into jackktretwo_ch1
     file 'trees/jackk-third.tre' into jackktrethird_ch1
+    file 'SUPPORT/' into suppinfo_ch2
     file "GENERA-Phylogeny.log" into log_ch7
 
     //script
@@ -551,14 +582,18 @@ process jaccknifeMLinference {
             #format matrices
             find *.ali | cut -f1 -d'.' > list
             for f in `cat list`; do mkdir \$f; mv \$f.ali \$f/; done
-            for f in `cat list`; do cd \$f; ali2phylip.pl \$f.ali --map-ids; cd ../; done
+            for f in `cat list`; do cd \$f; ali2phylip.pl \$f.ali --map-ids; mv \$f.ali \$f.ali.bak; phylip2ali.pl \$f.phy; ali2fasta.pl \$f.ali; cd ../; done
             #ML inference
-            for f in `cat list`; do cd \$f; raxmlHPC-PTHREADS-AVX -T $cpu -s \$f.phy -n \$f-RAXML-PROTGAMMALGF-fast -m PROTGAMMALGF -p 1975021703574  -f F; cd ../; done
+            #for f in `cat list`; do cd \$f; raxmlHPC-PTHREADS-AVX -T $cpu -s \$f.phy -n \$f-RAXML-PROTGAMMALGF-fast -m PROTGAMMALGF -p 1975021703574  -f F; cd ../; done
+            for f in `cat list`; do cd \$f; raxml-ng --msa \$f.fasta --msa-format FASTA --data-type AA --model LG+G4+F --prefix \$f-RAXML-LGG4F --threads auto{$cpu}; cd ../; done
             #format tree
             mkdir protJ
+            #for f in `cat list`; do cd \$f; mv *.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; cut -f1 -d"@" f1 > temp; \
+            #mv temp f1; paste f1 f2 > RAxML_fastTree.idm;  format-tree.pl RAxML_fastTree.*-RAXML-PROTGAMMALGF-fast --map-ids; \
+            #mv RAxML_fastTree.tre ../protJ/\$f.tre; cd ../; done   
             for f in `cat list`; do cd \$f; mv *.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; cut -f1 -d"@" f1 > temp; \
-            mv temp f1; paste f1 f2 > RAxML_fastTree.idm;  format-tree.pl RAxML_fastTree.*-RAXML-PROTGAMMALGF-fast --map-ids; \
-            mv RAxML_fastTree.tre ../protJ/\$f.tre; cd ../; done   
+            mv temp f1; paste f1 f2 > \$f-RAXML-LGG4F.raxml.idm; format-tree.pl \$f-RAXML-LGG4F.raxml.bestTree --map-ids; \
+            mv \$f-RAXML-LGG4F.raxml.tre ../protJ/\$f.tre; cd ../; done
             #make consensus tree
             cd protJ
             cat *.tre > intree
@@ -572,6 +607,8 @@ process jaccknifeMLinference {
             cd  ../
             mkdir trees
             mv protJ/jackk.tre trees/
+            cp -r protJ/ SUPP/
+            mv SUPP SUPPORT/
             echo "GENERA info: jaccknife ML inferences" >> GENERA-Phylogeny.log
             #False tre for DNA
             echo "GENERA info: jaccknife not activated" > trees/jackk-two.tre
@@ -597,14 +634,17 @@ process jaccknifeMLinference {
             #format matrices
             find *.ali | cut -f1 -d'.' > list
             for f in `cat list`; do mkdir \$f-class; cp \$f.ali \$f-class/; done
-            for f in `cat list`; do cd \$f-class; ali2phylip.pl \$f.ali --map-ids; cd ../; done
+            for f in `cat list`; do cd \$f-class; ali2phylip.pl \$f.ali --map-ids; mv \$f.ali \$f.ali.bak; phylip2ali.pl \$f.phy; ali2fasta.pl \$f.ali; cd ../; done
             #ML inference
-            for f in `cat list`; do cd \$f-class; raxmlHPC-PTHREADS-AVX -T $cpu -s \$f.phy -n \$f-classic-fast -m GTRGAMMA -p 1975021703574  -f F; cd ../; done
+            for f in `cat list`; do cd \$f-class; raxml-ng --msa \$f.fasta --msa-format FASTA --data-type DNA --model GTR+G --prefix \$f-RAXML-GTRG --threads auto{$cpu}; cd ../; done
             #format tree
             mkdir dnaJclassic
-            for f in `cat list`; do cd \$f-class; mv *.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; \
-            cut -f1 -d"@" f1 > temp; mv temp f1; paste f1 f2 > RAxML_fastTree.idm; format-tree.pl RAxML_fastTree.*-classic-fast --map-ids; \
-            mv RAxML_fastTree.tre ../dnaJclassic/\$f.tre; cd ../; done   
+            #for f in `cat list`; do cd \$f-class; mv *.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; \
+            #cut -f1 -d"@" f1 > temp; mv temp f1; paste f1 f2 > RAxML_fastTree.idm; format-tree.pl RAxML_fastTree.*-classic-fast --map-ids; \
+            #mv RAxML_fastTree.tre ../dnaJclassic/\$f.tre; cd ../; done  
+            for f in `cat list`; do cd \$f-class; mv *.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; cut -f1 -d"@" f1 > temp; \
+            mv temp f1; paste f1 f2 > \$f-RAXML-GTRG.raxml.idm; format-tree.pl \$f-RAXML-GTRG.raxml.bestTree --map-ids; \
+            mv \$f-RAXML-GTRG.raxml.tre ../dnaJclassic/\$f.tre; cd ../; done 
             #make consensus tree
             cd dnaJclassic
             cat *.tre > intree
@@ -618,20 +658,25 @@ process jaccknifeMLinference {
             cd  ../
             mkdir trees
             mv dnaJclassic/jackk.tre trees/
+            cp -r dnaJclassic/ SUPP/
             echo "GENERA info: jaccknife DNA inferences, no partition" >> GENERA-Phylogeny.log
 
             #Jackknife on two first codons
             #format matrices
             find *.ali | cut -f1 -d'.' > list
             for f in `cat list`; do mkdir \$f-two; cp \$f.ali \$f-two/; done
-            for f in `cat list`; do cd \$f-two; ali2phylip.pl \$f.ali --map-ids; $companion \$f.phy --mode=two; mask-ali.pl blocks --alifile=\$f.ali; ali2phylip.pl \$f-blocks.ali --map-ids; cd ../; done
+            for f in `cat list`; do cd \$f-two; ali2phylip.pl \$f.ali --map-ids; $companion \$f.phy --mode=two; mask-ali.pl blocks --alifile=\$f.ali; ali2phylip.pl \$f-blocks.ali --map-ids; mv \$f-blocks.ali \$f-blocks.ali.bak; \
+            phylip2ali.pl \$f-blocks.phy; ali2fasta.pl \$f-blocks.ali; cd ../; done
             #ML inference
-            for f in `cat list`; do cd \$f-two; raxmlHPC-PTHREADS-AVX -T $cpu -s \$f-blocks.phy -n \$f-two-fast -m GTRGAMMA -p 1975021703574  -f F; cd ../; done
+            for f in `cat list`; do cd \$f-two; raxml-ng --msa \$f-blocks.fasta --msa-format FASTA --data-type DNA --model GTR+G --prefix \$f-blocks-RAXML-GTRG --threads auto{$cpu}; cd ../; done
             #format tree
             mkdir dnaJtwo
-            for f in `cat list`; do cd \$f-two; mv *blocks.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; \
-            cut -f1 -d"@" f1 > temp; mv temp f1; paste f1 f2 > RAxML_fastTree.idm; format-tree.pl RAxML_fastTree.*-two-fast --map-ids; \
-            mv RAxML_fastTree.tre ../dnaJtwo/\$f.tre; cd ../; done   
+            #for f in `cat list`; do cd \$f-two; mv *blocks.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; \
+            #cut -f1 -d"@" f1 > temp; mv temp f1; paste f1 f2 > RAxML_fastTree.idm; format-tree.pl RAxML_fastTree.*-two-fast --map-ids; \
+            #mv RAxML_fastTree.tre ../dnaJtwo/\$f.tre; cd ../; done  
+            for f in `cat list`; do cd \$f-two; mv *blocks.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; cut -f1 -d"@" f1 > temp; \
+            mv temp f1; paste f1 f2 > \$f-blocks-RAXML-GTRG.raxml.idm; format-tree.pl \$f-blocks-RAXML-GTRG.raxml.bestTree --map-ids; \
+            mv \$f-blocks-RAXML-GTRG.raxml.tre ../dnaJtwo/\$f.tre; cd ../; done  
             #make consensus tree
             cd dnaJtwo
             cat *.tre > intree
@@ -645,20 +690,21 @@ process jaccknifeMLinference {
             cd  ../
             #mkdir trees
             mv dnaJtwo/jackk-two.tre trees/
+            cp -r dnaJtwo/ SUPP/
             echo "GENERA info: jaccknife ML inferences, codon 1&2" >> GENERA-Phylogeny.log  
 
             #Jackknife with partition on third codon
             #format matrices
             find *.ali | cut -f1 -d'.' > list
             for f in `cat list`; do mkdir \$f-third; mv \$f.ali \$f-third/; done
-            for f in `cat list`; do cd \$f-third; ali2phylip.pl \$f.ali --map-ids; cd ../; done
+            for f in `cat list`; do cd \$f-third; ali2phylip.pl \$f.ali --map-ids; mv \$f.ali \$f.ali.bak; phylip2ali.pl \$f.phy; ali2fasta.pl \$f.ali; cd ../; done
             #ML inference
-            for f in `cat list`; do cd \$f-third; $companion \$f.phy --mode=third; raxmlHPC-PTHREADS-AVX -T $cpu -s \$f.phy -n \$f-third-fast -m GTRGAMMA -q partition.txt -p 1975021703574  -f F; cd ../; done
+            for f in `cat list`; do cd \$f-third; $companion \$f.phy --mode=third; raxml-ng --msa \$f.fasta --msa-format FASTA --data-type DNA --model partition.txt --prefix \$f-third-RAXML-GTRG --threads auto{$cpu}; cd ../; done
             #format tree
             mkdir dnaJthird
             for f in `cat list`; do cd \$f-third; mv *.idm temp.idm; cut -f1 temp.idm > f1; cut -f2 temp.idm > f2; sed -i -e 's/ /_/g' f1; sed -i -e 's/#//g' f2; \
-            cut -f1 -d"@" f1 > temp; mv temp f1; paste f1 f2 > RAxML_fastTree.idm; format-tree.pl RAxML_fastTree.*-third-fast --map-ids; \
-            mv RAxML_fastTree.tre ../dnaJthird/\$f.tre; cd ../; done   
+            cut -f1 -d"@" f1 > temp; mv temp f1; paste f1 f2 > \$f-third-RAXML-GTRG.raxml.idm; format-tree.pl \$f-third-RAXML-GTRG.raxml.bestTree --map-ids; \
+            mv \$f-third-RAXML-GTRG.raxml.tre ../dnaJthird/\$f.tre; cd ../; done   
             #make consensus tree
             cd dnaJthird
             cat *.tre > intree
@@ -672,12 +718,16 @@ process jaccknifeMLinference {
             cd  ../
             #mkdir trees
             mv dnaJthird/jackk-third.tre trees/
+            cp -r dnaJthird/ SUPP/
+            mv SUPP SUPPORT/
             echo "GENERA info: jaccknife DNA inferences, partition on third codon" >> GENERA-Phylogeny.log
             """
         }
         else {
             println "GENERA info: jaccknife not activated"
             """
+            mkdir SUPPORT
+            mv SUPP/* SUPPORT/
             mkdir trees
             echo "GENERA info: jaccknife not activated" > trees/jackk.tre
             echo "GENERA info: jaccknife not activated" > trees/jackk-two.tre
@@ -703,6 +753,7 @@ process publicationResults {
     file 'jackk-two.tre' from jackktretwo_ch1
     file 'jackk-third.tre' from jackktrethird_ch1
     file 'IDM' from idm_ch
+    file 'SUPPORT/' from suppinfo_ch2
     file "GENERA-Phylogeny.log" from log_ch7
     val companion from params.companion
 
@@ -715,6 +766,7 @@ process publicationResults {
     file 'jackk-DNA-final.tre' into jackkDNAFINAL_ch
     file 'jackk-DNAtwo-final.tre' into jackkDNAtwoFINAL_ch
     file 'jackk-DNAthird-final.tre' into jackkDNAthirdFINAL_ch
+    file 'SUPPORTING-DATA' into supportingFINAL_ch
     file "GENERA-Phylogeny.log" into logFINAL_ch
 
     //script
@@ -738,6 +790,7 @@ process publicationResults {
             echo "GENERA info: false file" > jackk-DNA-final.tre
             echo "GENERA info: false file" > jackk-DNAtwo-final.tre
             echo "GENERA info: false file" > jackk-DNAthird-final.tre
+            mv SUPPORT SUPPORTING-DATA/
             echo "GENERA info: format-trees" >> GENERA-Phylogeny.log
             """
         }
@@ -759,6 +812,7 @@ process publicationResults {
             echo "GENERA info: false file" > jackk-DNAtwo-final.tre
             echo "GENERA info: false file" > jackk-DNAthird-final.tre
             echo "GENERA info: format-trees" >> GENERA-Phylogeny.log
+            mv SUPPORT SUPPORTING-DATA/
             echo "GENERA info: false file" > jackk-Prot-final.tre
             """
         }
@@ -786,7 +840,8 @@ process publicationResults {
             cp IDM jackk-third.idm; format-tree.pl jackk-third.tre --map-ids --from-consense; mv jackk-third.tre jackk-DNAthird-final.tre
             #False prot
             echo "GENERA info: false file" > protML-final.tre
-            echo "GENERA info: false file" > jackk-Prot-final.tre        
+            echo "GENERA info: false file" > jackk-Prot-final.tre    
+            mv SUPPORT SUPPORTING-DATA/    
             echo "GENERA info: format-trees" >> GENERA-Phylogeny.log
             """
         }
@@ -812,6 +867,7 @@ process publicationResults {
             #False prot
             echo "GENERA info: false file" > protML-final.tre
             echo "GENERA info: false file" > jackk-Prot-final.tre 
+            mv SUPPORT SUPPORTING-DATA/
             echo "GENERA info: format-trees" >> GENERA-Phylogeny.log
             """
         }

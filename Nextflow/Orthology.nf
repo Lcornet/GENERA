@@ -807,7 +807,7 @@ process specific {
                 echo "GENERA info: specific gene from Orthofinder files" > filtered-OG.list
                 #get files
                 mkdir ANVIO-files
-                echo "GENERA info: specific gene from pre-computed Orthofinder files >> ANVIO-files/info
+                echo "GENERA info: specific gene from pre-computed Orthofinder files" >> ANVIO-files/info
                 echo "GENERA info: specific gene from pre-computed Orthofinder files" >> GENERA-SGC.log
                 """
             }

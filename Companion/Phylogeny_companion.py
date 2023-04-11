@@ -35,8 +35,8 @@ def main(main_file, mode):
             if (loop == 1):
                 #Print partition file
                 third_out = open("partition.txt", "w")
-                third_out.write('DNA, p1=1-' + str(length) + '\\3,2-' + str(length) + '\\3' + "\n")
-                third_out.write('DNA, p2=3-' + str(length) + '\\3' + "\n")
+                third_out.write('GTR+G, p1=1-' + str(length) + '\\3,2-' + str(length) + '\\3' + "\n")
+                third_out.write('GTR+G, p2=3-' + str(length) + '\\3' + "\n")
                 break
     
     if (mode == 'two'):
