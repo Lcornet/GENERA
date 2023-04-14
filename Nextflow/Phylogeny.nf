@@ -618,6 +618,8 @@ process jaccknifeMLinference {
         else {
             println "GENERA info: jaccknife not activated"
             """
+            mkdir SUPPORT
+            mv SUPP/* SUPPORT/
             mkdir trees
             echo "GENERA info: jaccknife not activated" > trees/jackk.tre
             echo "GENERA info: jaccknife not activated" > trees/jackk-two.tre
