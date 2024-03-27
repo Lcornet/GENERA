@@ -53,7 +53,7 @@ def main(main_file, mode):
 
     
     #Open bins
-    if (mode == 'all'):
+    if (mode == 'allSR'):
         #metabat
         metabat_of = {}
         metabat_list = glob.glob("METABAT_bin*.fa")
@@ -175,7 +175,119 @@ def main(main_file, mode):
             out_file.write(str(file_record) + "\n")
         out_file.write('GENERA info: CONCOCT binned ' + str(concoct_totContigs) + ' % of contigs and ' + str(concoct_totlen) + ' % of the length of the metagenome' + "\n")
     
-    
+    elif (mode == 'LRbinner'):
+        #LRbinner
+        LRB_of = {}
+        LRB_list = glob.glob("LRB_bin*.fa")
+        for LRB in LRB_list:
+            Lfile = open(LRB)
+            for line in Lfile:
+                file_record = line.replace("\n", "")
+                if '>' in line:
+                    seq = file_record.replace(">", "")
+                    LRB_of[seq] = 1
+        
+        #compute percentage
+        binned_contigs = 0
+        binned_length = 0
+        for contig in length_of:
+            if (contig in LRB_of):
+                binned_contigs += 1
+                length = length_of[contig]
+                binned_length += length
+        #stats
+        LRB_totContigs = (float(binned_contigs) / float(defline_number)) * 100
+        LRB_totlen = (float(binned_length) / float(tot_len)) * 100       
+
+        out_file = open('binned.info', "w")
+        #open GENERA-Assembler.log
+        info_file = open('GENERA-Assembler.log')
+        for line in info_file:
+            file_record = line.replace("\n", "")
+            out_file.write(str(file_record) + "\n")
+        out_file.write('GENERA info: LRbinner binned ' + str(LRB_totContigs) + ' % of contigs and ' + str(LRB_totlen) + ' % of the length of the metagenome' + "\n")   
+
+    elif (mode == 'all'):
+        #metabat
+        metabat_of = {}
+        metabat_list = glob.glob("METABAT_bin*.fa")
+        for metabat in metabat_list:
+            Mfile = open(metabat)
+            for line in Mfile:
+                file_record = line.replace("\n", "")
+                if '>' in line:
+                    seq = file_record.replace(">", "")
+                    metabat_of[seq] = 1
+
+        #concoct
+        concoct_of = {}
+        concoct_list = glob.glob("CONCOCT_bin*.fa")
+        for concoct in concoct_list:
+            Cfile = open(concoct)
+            for line in Cfile:
+                file_record = line.replace("\n", "")
+                if '>' in line:
+                    seq = file_record.replace(">", "")
+                    concoct_of[seq] = 1
+
+        #LRbinner
+        LRB_of = {}
+        LRB_list = glob.glob("LRB_bin*.fa")
+        print(LRB_list)
+        for LRB in LRB_list:
+            Lfile = open(LRB)
+            for line in Lfile:
+                file_record = line.replace("\n", "")
+                if '>' in line:
+                    seq = file_record.replace(">", "")
+                    LRB_of[seq] = 1 
+        print(LRB_of)
+
+        #compute percentage:Metabat
+        binned_contigs = 0
+        binned_length = 0
+        for contig in length_of:
+            if (contig in metabat_of):
+                binned_contigs += 1
+                length = length_of[contig]
+                binned_length += length
+        #stats
+        metabat_totContigs = (float(binned_contigs) / float(defline_number)) * 100
+        metabat_totlen = (float(binned_length) / float(tot_len)) * 100
+
+        #compute percentage:Concoct
+        binned_contigs = 0
+        binned_length = 0
+        for contig in length_of:
+            if (contig in concoct_of):
+                binned_contigs += 1
+                length = length_of[contig]
+                binned_length += length
+        #stats
+        concoct_totContigs = (float(binned_contigs) / float(defline_number)) * 100
+        concoct_totlen =  (float(binned_length) / float(tot_len)) * 100
+        
+        #compute percentage:LRbinner
+        binned_contigs = 0
+        binned_length = 0
+        for contig in length_of:
+            if (contig in LRB_of):
+                binned_contigs += 1
+                length = length_of[contig]
+                binned_length += length
+        #stats
+        LRB_totContigs = (float(binned_contigs) / float(defline_number)) * 100
+        LRB_totlen = (float(binned_length) / float(tot_len)) * 100        
+
+        out_file = open('binned.info', "w")
+        #open GENERA-Assembler.log
+        info_file = open('GENERA-Assembler.log')
+        for line in info_file:
+            file_record = line.replace("\n", "")
+            out_file.write(str(file_record) + "\n")
+        out_file.write('GENERA info: Metabat binned ' + str(metabat_totContigs) + ' % of contigs and ' + str(metabat_totlen) + ' of the length of the metagenome' + "\n")
+        out_file.write('GENERA info: CONCOCT binned ' + str(concoct_totContigs) + ' % of contigs and ' + str(concoct_totlen) + ' of the length of the metagenome' + "\n") 
+        out_file.write('GENERA info: LRbinner binned ' + str(LRB_totContigs) + ' % of contigs and ' + str(LRB_totlen) + ' % of the length of the metagenome' + "\n") 
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,86 @@
+Bootstrap: library
+From: ubuntu:18.04
+Stage: build
+
+%files
+    Assembly_companion.py /opt/
+
+%environment
+    export LISTEN_PORT=12345
+    export LC_ALL=C
+    export PATH=/opt/usr/local/bin:$PATH
+    export PATH=/root/metabat/bin/:$PATH
+    export PATH=/opt/miniconda/bin:$PATH
+    export PATH=/opt/LRBinner:$PATH
+
+%post
+    #Update part
+    #permission part
+    chmod -R 777 /opt #chmod775 can be enough
+    chmod -R 777 /root #chmod775 can be enough
+
+    apt-get update && apt-get install -y netcat
+    NOW=`date`
+    echo "export NOW=\"${NOW}\"" >> $SINGULARITY_ENVIRONMENT
+
+    #apt-get
+    apt-get -y install software-properties-common
+    add-apt-repository universe
+    apt-get -y update
+    apt-get -y install git
+    apt-get -y install wget
+    apt-get -y install autoconf
+    apt-get install -y build-essential libboost-all-dev git cmake curl libncurses5-dev zlib1g-dev
+
+    #bwa
+    apt-get -y install bwa
+
+    #samtools
+    apt-get -y install samtools
+
+    #metabat
+    cd /opt/
+    git clone https://bitbucket.org/berkeleylab/metabat.git
+    cd metabat/
+    mkdir build ; cd build && cmake -DCMAKE_INSTALL_PREFIX=$HOME/metabat .. && make && make install
+    export PATH=/root/metabat/bin/:$PATH
+
+    #instal conda
+    cd /opt/
+    wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
+    export PATH=/opt/miniconda/bin:$PATH
+
+    #conda
+    conda config --add channels defaults
+    conda config --add channels bioconda
+    conda config --add channels conda-forge
+   
+    #LRbinner
+    conda install -y python=3.10 numpy scipy seaborn h5py hdbscan gcc openmp tqdm biopython fraggenescan hmmer tabulate pytorch pytorch-cuda=11.7 -c pytorch -c nvidia -c bioconda
+    cd /opt/
+    git clone https://github.com/anuradhawick/LRBinner.git
+    cd LRBinner/
+    python setup.py build
+
+    #concoct
+    apt-get install -y libopenblas-dev
+    cd /opt/
+    #conda install -c anaconda python=3.7
+    conda install --yes concoct=1.1.0
+
+    #companion
+    cd /opt/
+    mkdir companion
+    mv Assembly_companion.py companion/
+    pip3 install click
+
+%runscript
+    echo "This container contains : "
+
+%help
+    This is a container for
+ 
+%labels
+    Author Luc Cornet
+    Version v0.0.1

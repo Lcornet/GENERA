@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 1.0.0 
+    Version: 1.1.0 - GTDB release 214
 
     Usage:
     
@@ -34,7 +34,7 @@ def helpMessage() {
 
     Optional arguments:
     --cpu                    number of cpus to use, default = 1
-    --database               GTDBTK_DATA_PATH, defaukt =/scratch/ulg/GENERA/Databases/GTDB/release207/
+    --database               GTDBTK_DATA_PATH, defaukt =/scratch/ulg/GENERA/Databases/GTDB/release214/
 
     """.stripIndent()
     
@@ -61,13 +61,13 @@ if (params.genome == null) {
 params.cpu = '1'
 
 //GTDBTK_DATA_PATH=/scratch/ulg/GENERA/Databases/GTDB/release207/
-params.database='/scratch/ulg/GENERA/Databases/GTDB/release207/'
+params.database='/scratch/ulg/GENERA/Databases/GTDB/release214/'
 
 //outdir
 params.outdir='GENERA_GTDB'
 
 //version
-params.version = '1.0.0'
+params.version = '1.1.0'
 
 /*
 CORE PROGRAM
@@ -97,7 +97,7 @@ process gtdb {
     cp genome/*.fna GEN/
     #export GTDBTK_DATA_PATH=/scratch/ulg/GENERA/Databases/GTDB/release207/
     export GTDBTK_DATA_PATH=$database
-    gtdbtk classify_wf --genome_dir GEN --out_dir classify_out -x fna --cpus $cpu
+    gtdbtk classify_wf --genome_dir GEN --out_dir classify_out -x fna --cpus $cpu --skip_ani_screen
     mkdir classify
     cp classify_out/*.tsv classify/
     """

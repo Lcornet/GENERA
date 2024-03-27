@@ -15,7 +15,7 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     export PATH=/opt/FastANI:$PATH
     export PATH=/opt/FASTTREE:$PATH
     #export GTDBTK_DATA_PATH=/scratch/ulg/GENERA/Databases/GTDB/release202/
-    export GTDBTK_DATA_PATH=release202/
+    #export GTDBTK_DATA_PATH=release202/
 
 %post
     # Ubuntu
@@ -48,7 +48,7 @@ MirrorURL: http://us.archive.ubuntu.com/ubuntu/
     wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
     bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
     export PATH=/opt/miniconda/bin:$PATH
-    conda install -c bioconda python=3.7 -y
+    conda install -c bioconda python=3.8 -y
 
     #Blast
     apt-get install ncbi-blast+ -y

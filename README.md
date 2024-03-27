@@ -9,7 +9,14 @@ Please visit the wiki for tutorials and access to the tools:
 https://github.com/Lcornet/GENERA/wiki  
 
 # NEWS
-Update in Phylogeny.nf, pass on RAxMLV8. The fast method is no longer used for jackknife, pass on ML bestree.  
+Assembly V3.0.0 is available - Major update - March 27 2024.  
+- Possibility to use only long reads    
+- add skiptrimming option  
+- add skippolishing option  
+- add binningmethod option  
+- add LRbinnier in binner   
+- delete quast, please use GENcontams instead  
+- genomeSIZE option now only used for CANU  
 
 # Information about the GEN-ERA project
 Please visit  

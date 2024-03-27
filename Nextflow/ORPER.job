@@ -10,4 +10,5 @@
 export OMP_NUM_THREADS=20
 export MKL_NUM_THREADS=20
 
-/home/ulg/bioec/lcornet/nextflow run ORPER.nf --reftaxolevel=<FIELD1> --refgroup=<FIELD2> --refgenbank=yes --outgroup=<FIELD3> --outtaxolevel=<FIELD4> --outgenbank=yes --cpu=20 --SSU=<FASTA file> --cdhit=no --drep=no
+module --ignore-cache load Nextflow/21.08.0
+nextflow run ORPER.nf --reftaxolevel=<FIELD1> --refgroup=<FIELD2> --refgenbank=yes --outgroup=<FIELD3> --outtaxolevel=<FIELD4> --outgenbank=yes --cpu=20 --SSU=<FASTA file> --cdhit=no --drep=no

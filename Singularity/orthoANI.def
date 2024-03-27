@@ -1,0 +1,54 @@
+BootStrap: debootstrap
+OSVersion: xenial
+MirrorURL: http://us.archive.ubuntu.com/ubuntu/
+
+%files
+    OAU.jar /opt/
+
+%environment
+    export PATH=/opt/usr/local/bin:$PATH
+    export PATH:/opt/USEARCH:$PATH
+
+%post
+    # Ubuntu
+
+    ## permissions
+    chmod -R 777 /opt           # chmod775 can be enough
+    chmod -R 777 /root          # chmod775 can be enough
+
+    ## update repository for apt
+    apt install -y software-properties-common
+    apt-add-repository universe
+    apt update
+
+    ## UFT8
+    apt install -y locales
+    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+
+    #basic
+    apt install git -y
+    #apt install python3.8 -y
+    apt-get install python3-pip -y
+    apt-get install wget -y
+    apt-get install unzip -y
+    apt-get install rsync -y
+    apt-get install libssl-dev -y
+    apt install default-jdk -y
+    
+    #usearch
+    cd /opt/
+    mkdir USEARCH
+    cd USEARCH
+    wget http://www.drive5.com/downloads/usearch11.0.667_i86linux32.gz
+    gunzip usearch11.0.667_i86linux32.gz
+    chmod a+x usearch11.0.667_i86linux32
+
+%runscript
+    echo "This container contains : "
+
+%help
+    This is a container for contamination detection
+ 
+%labels
+    Author Luc Cornet
+    Version v0.0.1

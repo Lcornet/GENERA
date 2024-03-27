@@ -298,6 +298,7 @@ process GetGenomesRefseq {
             $companion GCF.tax --mode=fetch --taxa=$taxa --refgroup=$group
             for f in `cat GCF.refgroup.uniq`; do grep \$f ftp.sh; done > reduce-ftp.sh
             bash reduce-ftp.sh
+            find *.gz -type f -empty -print -delete
             gunzip *.gz
             find *.fna | cut -f1,2 -d"." > fna.list
             for f in `cat fna.list`; do inst-abbr-ids.pl \$f*.fna --id-regex=:DEF --id-prefix=\$f; done
@@ -310,6 +311,7 @@ process GetGenomesRefseq {
             $companion GCF.tax --mode=fetch --taxa=$taxa --refgroup=$group
             for f in `cat GCF.refgroup.uniq`; do grep \$f ftp.sh; done > reduce-ftp.sh
             bash reduce-ftp.sh
+            find *.gz -type f -empty -print -delete
             gunzip *.gz
             echo "Add RefSeq Genomes, non abbr mode" >> Genome-downloader.log
             """
@@ -356,6 +358,7 @@ process GetGenomesGenbank {
             $companion GCA.tax --mode=fetch --taxa=$taxa --refgroup=$group
             for f in `cat GCA.refgroup.uniq`; do grep \$f GCA-ftp.sh; done > GCA-reduce-ftp.sh
             bash GCA-reduce-ftp.sh
+            find *.gz -type f -empty -print -delete
             gunzip *.gz
             find *.fna | cut -f1,2 -d"." > fna.list
             for f in `cat fna.list`; do inst-abbr-ids.pl \$f*.fna --id-regex=:DEF --id-prefix=\$f; done
@@ -372,6 +375,7 @@ process GetGenomesGenbank {
             $companion GCA.tax --mode=fetch --taxa=$taxa --refgroup=$group
             for f in `cat GCA.refgroup.uniq`; do grep \$f GCA-ftp.sh; done > GCA-reduce-ftp.sh
             bash GCA-reduce-ftp.sh
+            find *.gz -type f -empty -print -delete
             gunzip *.gz
             #for fix and proceed , false genbank files
             echo "Add GenBank Genomes activated" > FALSE-abbr.fna

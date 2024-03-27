@@ -21,7 +21,7 @@ def helpMessage() {
 
     Description:
 
-    Version: 2.0.0 
+    Version: 3.0.0 
 
     Usage:
     
@@ -100,7 +100,7 @@ params.outdir='GENERA_ANI'
 params.companion = '/opt/companion/ANI_companion.py'
 
 //version
-params.version = '2.0.0'
+params.version = '3.0.0'
 
 /*
 CORE PROGRAM
@@ -139,9 +139,13 @@ process fastANI {
             println "GENERA info: running fastANI"
             """
             mkdir GEN
-            cp genome/* GEN/
+            #cp genome/* GEN/
+            #cd genome/
+            for f in genome/*; do cp \$f GEN/; done
+            #cd ../
             cd GEN/
-            find *.fna > list
+            #find *.fna > list
+            find -type f -name '*.fna' > list
             cp ../shortlist .
             for f in `cat shortlist`; do fastANI -q \$f.fna --rl list -o ANI-\$f -t $cpu --matrix --minFraction fraction ; done
             rm -f *.matrix
@@ -200,7 +204,8 @@ process orthoani {
             cp ../shortlist .
             sed -i -e 's/.fna//g' list
             sed -i -e 's/.fna//g' shortlist
-            for f in `cat shortlist`; do for d in `cat list`; do orthoani -q \$f.fna -r \$d.fna > temp; echo -n \$f-\$d- > \$f-\$d.tempANI; echo -n \$(<temp) >> \$f-\$d.tempANI; echo -X-X >> \$f-\$d.tempANI; sed -i -e 's/-/\t/g' \$f-\$d.tempANI; rm -f temp; done; done
+            #for f in `cat shortlist`; do for d in `cat list`; do orthoani -q \$f.fna -r \$d.fna > temp; echo -n \$f-\$d- > \$f-\$d.tempANI; echo -n \$(<temp) >> \$f-\$d.tempANI; echo -X-X >> \$f-\$d.tempANI; sed -i -e 's/-/\t/g' \$f-\$d.tempANI; rm -f temp; done; done
+            for f in `cat shortlist`; do for d in `cat list`; do java -jar /opt/OAU.jar -u /opt/USEARCH/usearch11.0.667_i86linux32 -f1 \$f.fna -f2 \$d.fna -n $cpu > 2del; tail -n1 2del | cut -f2 > temp; echo -n \$f-\$d- > \$f-\$d.tempANI; echo -n \$(<temp) >> \$f-\$d.tempANI; echo -X-X >> \$f-\$d.tempANI; sed -i -e 's/-/\t/g' \$f-\$d.tempANI; rm -f temp 2del; done; done
             cat *.tempANI > ANI
             cd ../
             cat GEN/ANI* > oANI.txt 
@@ -214,7 +219,8 @@ process orthoani {
             cd GEN/
             find *.fna > list
             sed -i -e 's/.fna//g' list
-            for f in `cat list`; do for d in `cat list`; do orthoani -q \$f.fna -r \$d.fna > temp; echo -n \$f-\$d- > \$f-\$d.tempANI; echo -n \$(<temp) >> \$f-\$d.tempANI; echo -X-X >> \$f-\$d.tempANI; sed -i -e 's/-/\t/g' \$f-\$d.tempANI; rm -f temp; done; done
+            #for f in `cat list`; do for d in `cat list`; do orthoani -q \$f.fna -r \$d.fna > temp; echo -n \$f-\$d- > \$f-\$d.tempANI; echo -n \$(<temp) >> \$f-\$d.tempANI; echo -X-X >> \$f-\$d.tempANI; sed -i -e 's/-/\t/g' \$f-\$d.tempANI; rm -f temp; done; done
+            for f in `cat list`; do for d in `cat list`; do java -jar /opt/OAU.jar -u /opt/USEARCH/usearch11.0.667_i86linux32 -f1 \$f.fna -f2 \$d.fna -n $cpu > 2del; tail -n1 2del | cut -f2 > temp; echo -n \$f-\$d- > \$f-\$d.tempANI; echo -n \$(<temp) >> \$f-\$d.tempANI; echo -X-X >> \$f-\$d.tempANI; sed -i -e 's/-/\t/g' \$f-\$d.tempANI; rm -f temp 2del; done; done
             cat *.tempANI > ANI
             cd ../
             cp GEN/ANI oANI.txt

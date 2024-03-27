@@ -35,19 +35,24 @@ def helpMessage() {
     
     Mandatory arguments:
     --shortreadsR1            Path to Illumina short reads forward, R1 fastq.
-    --shortreadsR2            Path to Illumina short reads reverse, R2 fastq.              
+    --shortreadsR2            Path to Illumina short reads reverse, R2 fastq.   
+    or
+    --ontreads                Path to Nanopore long reads, fastq
+    or
+    --pbreads                 Path to Pacbio long reads, fastq              
 
     Optional arguments:
-    --ontreads                Path to Nanopore long reads, fastq
-    --pbreads                 Path to Pacbio long reads, fastq
-    --genomeSIZE              Size of the expected genome, mandatory for long reads assembler. (m or gb)
+    --genomeSIZE              Specify genome size, mandatory for CANU
+    --skiptrimming            Skip the shortreads fastp trimming, yes or no, default = no
+    --skippolishing           Skip polishing by pilon, yes or no, default = no
     --shortreadassembler      Specify which tool to use, SPAdes or MEGAHIT, default = SPAdes
     --longreadassembler       Specify which tool to use, CANU or Flye, default = Flye
     --metagenome              metagenome assembly, not activated by default - yes or no.
                               the assembly will be done by metaSPAdes or MEGAHIT if only illumina short reads are provided
                               if long reads are provided, metaFlye will be used.
     --megahitmeta             Specify the metagenomic preset of MEGAHIT, sensitive or meta-large, default = large
-    --binner                  Specify which tool to use for binning, metabat or concoct or all,  default = none
+    --binningmethod           Specify the binning method, based on short reads (SR) or long reads (LR) or both, default = SR
+    --binner                  Specify which tool to use for binning, metabat or concoct or allSR or LRbinner or all,  default = none
     --ragtag                  activate ragat scaffold to map your assembly according to a reference genome (to provide), yes or no, default = no
     --refgenome               reference genome used by ragtag, mandatory with ragtag, default = none
     --outdir                  Name of the output directory, default GENERA-assembly
@@ -70,16 +75,10 @@ INPUT AND OPTIONS SETTING
 */
 
 //Path to short reads fastq : Mandatory
-params.shortreadsR1 = null
-if (params.shortreadsR1 == null) {
-	exit 1, "Path to Illumina short reads forward, R1 fastq."
-}
+params.shortreadsR1 = 'no'
 
 //Path to short reads fastq : Mandatory
-params.shortreadsR2 = null
-if (params.shortreadsR2 == null) {
-	exit 1, "Path to Illumina short reads forward, R2 fastq."
-}
+params.shortreadsR2 = 'no'
 
 //Path to nanopore reads fastq
 params.ontreads = 'no'
@@ -99,6 +98,12 @@ params.RAM = '280'
 //Genome size: Mandatory if Long reads
 params.genomeSIZE = '0'
 
+//skip trimming
+params.skiptrimming = 'no'
+
+//skip polishing
+params.skippolishing = 'no'
+
 //short read assembled
 params.shortreadassembler = 'SPAdes'
 
@@ -107,6 +112,9 @@ params.longreadassembler= 'Flye'
 
 //MEGAHIT preset
 params.megahitmeta = 'large'
+
+//binning method 
+params.binningmethod = 'SR'
 
 //binning tool
 params.binner = 'none'
@@ -124,7 +132,7 @@ params.outdir='GENERA-assembly'
 params.companion = '/opt/companion/Assembly_companion.py'
 
 //version
-params.version = '2.0.0'
+params.version = '3.0.0'
 
 /*
 CORE PROGRAM
@@ -135,8 +143,10 @@ shortreadsR1_ch = Channel.fromPath(params.shortreadsR1)
 shortreadsR2_ch = Channel.fromPath(params.shortreadsR2)
 ontreads_ch1 = Channel.fromPath(params.ontreads)
 ontreads_ch2 = Channel.fromPath(params.ontreads)
+ontreads_ch3 = Channel.fromPath(params.ontreads)
 pbreads_ch1 = Channel.fromPath(params.pbreads)
 pbreads_ch2 = Channel.fromPath(params.pbreads)
+pbreads_ch3 = Channel.fromPath(params.pbreads)
 refgenome_ch = Channel.fromPath(params.refgenome)
 
 //Trimming of short reads
@@ -164,14 +174,27 @@ process Trimming {
 
     //script
     script:
-
-    """
-    fastp --in1 R1.fastq --in2 R2.fastq --out1 R1-fastp.fastq --out2 R2-fastp.fastq --thread $cpu
-    fastqc R1-fastp.fastq -t $cpu
-    fastqc R2-fastp.fastq -t $cpu
-    echo "fastp done" > fastp.log
-    echo "GENERA info: Trimming done" >> GENERA-Assembler.log
-    """
+    if (params.skiptrimming == 'no' ){
+        println "GENERA info: fatsp trimming activated"
+        """
+        fastp --in1 R1.fastq --in2 R2.fastq --out1 R1-fastp.fastq --out2 R2-fastp.fastq --thread $cpu
+        fastqc R1-fastp.fastq -t $cpu
+        fastqc R2-fastp.fastq -t $cpu
+        echo "fastp done" > fastp.log
+        echo "GENERA info: Trimming done" >> GENERA-Assembler.log
+        """
+    }
+    else {
+        println "GENERA info: fatsp trimming skipped"
+        """
+        echo "GENERA info: Trimming skipped" >> R1-fastp.fastq
+        echo "GENERA info: Trimming skipped" >> R2-fastp.fastq
+        echo "GENERA info: Trimming skipped" >> R1-fastp_fastqc.html
+        echo "GENERA info: Trimming skipped" >> R2-fastp_fastqc.html
+        echo "GENERA info: Trimming skipped" >> fastp.log
+        echo "GENERA info: Trimming skipped" >> GENERA-Assembler.log
+        """
+    }
 }
 
 //Short reads assembly
@@ -285,19 +308,12 @@ process longreadsassembly {
             """
         }
         else if (params.longreadassembler == 'Flye'){
-            if (params.genomeSIZE == '0'){
-                println "GENERA info: For long reads assembly, genome size is required"
-                """
-                """
-            }
-            else {
-                println "GENERA info: Assembly for ONT long reads activated, Assembly will be done by Flye"
-                """
-                flye --nano-raw ont.fastq --out-dir FLYE --genome-size $size --threads $cpu
-                cp FLYE/assembly.fasta LR_assembly.fasta
-                echo "GENERA info: Assembly for ONT long reads activated, Assembly will be done by Flye with: genome-size = $size " >> GENERA-Assembler.log
-                """
-            }
+            println "GENERA info: Assembly for ONT long reads activated, Assembly will be done by Flye"
+            """
+            flye --nano-raw ont.fastq --out-dir FLYE --threads $cpu
+            cp FLYE/assembly.fasta LR_assembly.fasta
+            echo "GENERA info: Assembly for ONT long reads activated, Assembly will be done by Flye with: genome-size = $size " >> GENERA-Assembler.log
+            """
         }
         else if (params.longreadassembler == 'CANU'){
             if (params.genomeSIZE == '0'){
@@ -326,19 +342,13 @@ process longreadsassembly {
             """
         }
         else if (params.longreadassembler == 'Flye'){
-            if (params.genomeSIZE == '0'){
-                println "GENERA info: For long reads assembly, genome size is required"
-                """
-                """
-            }
-            else {
-                println "GENERA info: Assembly for PB long reads activated, Assembly will be done by Flye"
-                """
-                flye --pacbio-raw pb.fastq --out-dir FLYE --genome-size $size --threads $cpu
-                cp FLYE/assembly.fasta LR_assembly.fasta
-                echo "GENERA info: Assembly for PB long reads activated, Assembly will be done by Flye with: genome-size=$size " >> GENERA-Assembler.log
-                """
-            }
+            println "GENERA info: Assembly for PB long reads activated, Assembly will be done by Flye"
+            """
+            #flye --pacbio-raw pb.fastq --out-dir FLYE --genome-size $size --threads $cpu
+            flye --pacbio-raw pb.fastq --out-dir FLYE --threads $cpu
+            cp FLYE/assembly.fasta LR_assembly.fasta
+            echo "GENERA info: Assembly for PB long reads activated, Assembly will be done by Flye with: genome-size=$size " >> GENERA-Assembler.log
+            """            
         }
         else if (params.longreadassembler == 'CANU'){
             if (params.genomeSIZE == '0'){
@@ -384,41 +394,52 @@ process polishing {
     file "assembly_final.fasta" into pilon_ch3
     file "assembly_final.fasta" into pilon_ch4
     file "assembly_final.fasta" into pilon_ch5
+    file "assembly_final.fasta" into pilon_ch6
     file "GENERA-Assembler.log" into log_ch4
 
 
     //script
     script:
-    if (params.ontreads != 'no'){
-        println "GENERA info: polishing ONT assembly"
-        """
-        bwa index LR_assembly.fasta
-        bwa mem -t $cpu LR_assembly.fasta R1-fastp.fastq R2-fastp.fastq > short_read_mapping.sam
-        samtools sort short_read_mapping.sam -@ $cpu -o short_read_mapping.bam
-        samtools index short_read_mapping.bam
-        java -Xmx500G -jar /opt/pilon-1.24.jar --genome LR_assembly.fasta --bam short_read_mapping.bam --outdir CORR --output assembly_pilon
-        mv CORR/assembly_pilon.fasta assembly_final.fasta
-        echo "GENERA info: polishing ONT assembly" >> GENERA-Assembler.log
-        """
-    }
-    else if (params.pbreads != 'no'){
-        println "GENERA info: polishing Pacbio assembly"
-        """
-        bwa index LR_assembly.fasta
-        bwa mem -t $cpu LR_assembly.fasta R1-fastp.fastq R2-fastp.fastq > short_read_mapping.sam
-        samtools sort short_read_mapping.sam -@ $cpu -o short_read_mapping.bam
-        samtools index short_read_mapping.bam
-        java -Xmx500G -jar /opt/pilon-1.24.jar --genome LR_assembly.fasta --bam short_read_mapping.bam --outdir CORR --output assembly_pilon
-        mv CORR/assembly_pilon.fasta assembly_final.fasta
-        echo "GENERA info: polishing PB assembly" >> GENERA-Assembler.log
-        """
+    if (params.skippolishing == 'no') {
+        println "GENERA info: polishing by pilon activated"
+        if (params.ontreads != 'no'){
+            println "GENERA info: polishing ONT assembly"
+            """
+            bwa index LR_assembly.fasta
+            bwa mem -t $cpu LR_assembly.fasta R1-fastp.fastq R2-fastp.fastq > short_read_mapping.sam
+            samtools sort short_read_mapping.sam -@ $cpu -o short_read_mapping.bam
+            samtools index short_read_mapping.bam
+            java -Xmx500G -jar /opt/pilon-1.24.jar --genome LR_assembly.fasta --bam short_read_mapping.bam --outdir CORR --output assembly_pilon
+            mv CORR/assembly_pilon.fasta assembly_final.fasta
+            echo "GENERA info: polishing ONT assembly" >> GENERA-Assembler.log
+            """
+        }
+        else if (params.pbreads != 'no'){
+            println "GENERA info: polishing Pacbio assembly"
+            """
+            bwa index LR_assembly.fasta
+            bwa mem -t $cpu LR_assembly.fasta R1-fastp.fastq R2-fastp.fastq > short_read_mapping.sam
+            samtools sort short_read_mapping.sam -@ $cpu -o short_read_mapping.bam
+            samtools index short_read_mapping.bam
+            java -Xmx500G -jar /opt/pilon-1.24.jar --genome LR_assembly.fasta --bam short_read_mapping.bam --outdir CORR --output assembly_pilon
+            mv CORR/assembly_pilon.fasta assembly_final.fasta
+            echo "GENERA info: polishing PB assembly" >> GENERA-Assembler.log
+            """
+        }
+        else {
+            println "GENERA info: No Long reads assembly detected, skipping polishing"
+            """
+            mv SR_assembly.fasta assembly_final.fasta
+            echo "GENERA info: No Long reads assembly detected, skipping polishing" >> GENERA-Assembler.log
+            """       
+        }
     }
     else {
-        println "GENERA info: No Long reads assembly detected, skipping polishing"
+        println "GENERA info: polishing by pilon deactivated"
         """
         mv SR_assembly.fasta assembly_final.fasta
-        echo "GENERA info: No Long reads assembly detected, skipping polishing" >> GENERA-Assembler.log
-        """       
+        echo "GENERA info: polishing by pilon deactivated" >> GENERA-Assembler.log
+        """   
     }
 }
 
@@ -445,19 +466,33 @@ process shortreadsmapping {
 
     //script
     script:
-    """
-    bwa index assembly_final.fasta
-    #R1
-    bwa mem -t $cpu assembly_final.fasta R1-fastp.fastq > R1.sam
-    samtools sort R1.sam -@ $cpu -o R1-sort.bam
-    samtools index R1-sort.bam
-    #R2
-    bwa mem -t $cpu assembly_final.fasta R2-fastp.fastq > R2.sam
-    samtools sort R2.sam -@ $cpu -o R2-sort.bam
-    samtools index R2-sort.bam
-    jgi_summarize_bam_contig_depths --outputDepth depth.txt *sort.bam
-    echo "GENERA info: Short reads mapping with bwa mem and samtools" >> GENERA-Assembler.log
-    """
+    if (params.shortreadsR1 != 'no'){
+        println "GENERA info: short reads mapping"
+        """
+        bwa index assembly_final.fasta
+        #R1
+        bwa mem -t $cpu assembly_final.fasta R1-fastp.fastq > R1.sam
+        samtools sort R1.sam -@ $cpu -o R1-sort.bam
+        samtools index R1-sort.bam
+        #R2
+        bwa mem -t $cpu assembly_final.fasta R2-fastp.fastq > R2.sam
+        samtools sort R2.sam -@ $cpu -o R2-sort.bam
+        samtools index R2-sort.bam
+        jgi_summarize_bam_contig_depths --outputDepth depth.txt *sort.bam
+        echo "GENERA info: Short reads mapping with bwa mem and samtools" >> GENERA-Assembler.log
+        """
+    }
+    else {
+        println "GENERA info: no short reads, skipping mapping"
+        """
+        echo "GENERA info:  no short reads, skipping mapping" >> depth.txt
+        echo "GENERA info:  no short reads, skipping mapping" >> R1-sort.bam
+        echo "GENERA info:  no short reads, skipping mapping" >> R2-sort.bam
+        echo "GENERA info:  no short reads, skipping mapping" >> R1-sort.bam.bai
+        echo "GENERA info:  no short reads, skipping mapping" >> R2-sort.bam.bai
+        echo "GENERA info:  no short reads, skipping mapping" >> GENERA-Assembler.log
+        """   
+    }
 }
 
 //Mapping reads - long reads
@@ -508,7 +543,7 @@ process longreadsmapping {
 }
 
 //Binning
-process binning {
+process shortreadsbinning {
 	//informations
 
 	//input output
@@ -532,71 +567,135 @@ process binning {
 
     //script
     script:
-    if (params.binner == 'metabat'){
-        println "GENERA info: Metabat binning activated"
-        """
-        runMetaBat.sh -t $cpu assembly_final.fasta R1-sort.bam R2-sort.bam
-        cd assembly_final.fasta.metabat-bins*/
-        find *.fa | cut -f2 -d"." > fa.list
-        for f in `cat fa.list`; do cp bin.\$f.fa METABAT_bin-\$f.fa; done
-        mv METABAT_bin*.fa ../
-        cd ../
+    if (params.binningmethod == 'SR' || params.binningmethod == 'both') {
+        if (params.binner == 'metabat'){
+            println "GENERA info: Metabat binning activated"
+            """
+            runMetaBat.sh -t $cpu assembly_final.fasta R1-sort.bam R2-sort.bam
+            cd assembly_final.fasta.metabat-bins*/
+            find *.fa | cut -f2 -d"." > fa.list
+            for f in `cat fa.list`; do cp bin.\$f.fa METABAT_bin-\$f.fa; done
+            mv METABAT_bin*.fa ../
+            cd ../
+            echo "GENERA info: no binning activated" > CONCOCT_bin-FALSE.fa
+            echo "GENERA info: Metabat binning activated" >> GENERA-Assembler.log
+            """ 
+        }
+        else if (params.binner == 'concoct'){
+            println "GENERA info: CONCOCT binning activated"
+            """
+            cut_up_fasta.py assembly_final.fasta -c 10000 -o 0 --merge_last -b contigs_10K.bed > contigs_10K.fa
+            concoct_coverage_table.py contigs_10K.bed *sort.bam > coverage_table.tsv
+            concoct -t $cpu --composition_file contigs_10K.fa --coverage_file coverage_table.tsv -b concoct_output/
+            merge_cutup_clustering.py concoct_output/clustering_gt1000.csv > concoct_output/clustering_merged.csv
+            mkdir concoct_output/fasta_bins
+            extract_fasta_bins.py assembly_final.fasta concoct_output/clustering_merged.csv --output_path concoct_output/fasta_bins
+            cd concoct_output/fasta_bins
+            find *.fa | cut -f1 -d"." > fa.list
+            for f in `cat fa.list`; do cp \$f.fa CONCOCT_bin-\$f.fa; done
+            mv CONCOCT_bin* ../../
+            cd ../../
+            echo "GENERA info: no binning activated" > METABAT_bin-FALSE.fa
+            echo "GENERA info: CONCOCT binning activated" >> GENERA-Assembler.log
+            """ 
+        }
+        else if (params.binner == 'allSR' || params.binner == 'all' ) {
+            println "GENERA info: Metabat and CONCOCT binning activated"
+            """
+            #metabat
+            runMetaBat.sh -t $cpu assembly_final.fasta R1-sort.bam R2-sort.bam
+            cd assembly_final.fasta.metabat-bins*/
+            find *.fa | cut -f2 -d"." > fa.list
+            for f in `cat fa.list`; do cp bin.\$f.fa METABAT_bin-\$f.fa; done
+            mv METABAT_bin*.fa ../
+            cd ../
+            #concoct
+            cut_up_fasta.py assembly_final.fasta -c 10000 -o 0 --merge_last -b contigs_10K.bed > contigs_10K.fa
+            concoct_coverage_table.py contigs_10K.bed *sort.bam > coverage_table.tsv
+            concoct -t $cpu --composition_file contigs_10K.fa --coverage_file coverage_table.tsv -b concoct_output/
+            merge_cutup_clustering.py concoct_output/clustering_gt1000.csv > concoct_output/clustering_merged.csv
+            mkdir concoct_output/fasta_bins
+            extract_fasta_bins.py assembly_final.fasta concoct_output/clustering_merged.csv --output_path concoct_output/fasta_bins
+            cd concoct_output/fasta_bins
+            find *.fa | cut -f1 -d"." > fa.list
+            for f in `cat fa.list`; do cp \$f.fa CONCOCT_bin-\$f.fa; done
+            mv CONCOCT_bin* ../../ 
+            cd ../../
+            echo "GENERA info: Metabat and CONCOCT binning activated" >> GENERA-Assembler.log    
+            """ 
+        }
+        else{
+        println "GENERA info: no binning activated" 
+            """
+            echo "GENERA info: no binning activated" > METABAT_bin-FALSE.fa
+            echo "GENERA info: no binning activated" > CONCOCT_bin-FALSE.fa
+            echo "GENERA info: no binning activated" >> GENERA-Assembler.log
+            """ 
+        }
+    }
+    else {
+        """ 
         echo "GENERA info: no binning activated" > CONCOCT_bin-FALSE.fa
-        echo "GENERA info: Metabat binning activated" >> GENERA-Assembler.log
-        """ 
-    }
-    else if (params.binner == 'concoct'){
-        println "GENERA info: CONCOCT binning activated"
-        """
-        cut_up_fasta.py assembly_final.fasta -c 10000 -o 0 --merge_last -b contigs_10K.bed > contigs_10K.fa
-        concoct_coverage_table.py contigs_10K.bed *sort.bam > coverage_table.tsv
-        concoct -t $cpu --composition_file contigs_10K.fa --coverage_file coverage_table.tsv -b concoct_output/
-        merge_cutup_clustering.py concoct_output/clustering_gt1000.csv > concoct_output/clustering_merged.csv
-        mkdir concoct_output/fasta_bins
-        extract_fasta_bins.py assembly_final.fasta concoct_output/clustering_merged.csv --output_path concoct_output/fasta_bins
-        cd concoct_output/fasta_bins
-        find *.fa | cut -f1 -d"." > fa.list
-        for f in `cat fa.list`; do cp \$f.fa CONCOCT_bin-\$f.fa; done
-        mv CONCOCT_bin* ../../
-        cd ../../
         echo "GENERA info: no binning activated" > METABAT_bin-FALSE.fa
-        echo "GENERA info: CONCOCT binning activated" >> GENERA-Assembler.log
-        """ 
-    }
-    else if (params.binner == 'all') {
-        println "GENERA info: Metabat and CONCOCT binning activated"
-        """
-        #metabat
-        runMetaBat.sh -t $cpu assembly_final.fasta R1-sort.bam R2-sort.bam
-        cd assembly_final.fasta.metabat-bins*/
-        find *.fa | cut -f2 -d"." > fa.list
-        for f in `cat fa.list`; do cp bin.\$f.fa METABAT_bin-\$f.fa; done
-        mv METABAT_bin*.fa ../
-        cd ../
-        #concoct
-        cut_up_fasta.py assembly_final.fasta -c 10000 -o 0 --merge_last -b contigs_10K.bed > contigs_10K.fa
-        concoct_coverage_table.py contigs_10K.bed *sort.bam > coverage_table.tsv
-        concoct -t $cpu --composition_file contigs_10K.fa --coverage_file coverage_table.tsv -b concoct_output/
-        merge_cutup_clustering.py concoct_output/clustering_gt1000.csv > concoct_output/clustering_merged.csv
-        mkdir concoct_output/fasta_bins
-        extract_fasta_bins.py assembly_final.fasta concoct_output/clustering_merged.csv --output_path concoct_output/fasta_bins
-        cd concoct_output/fasta_bins
-        find *.fa | cut -f1 -d"." > fa.list
-        for f in `cat fa.list`; do cp \$f.fa CONCOCT_bin-\$f.fa; done
-        mv CONCOCT_bin* ../../ 
-        cd ../../
-        echo "GENERA info: Metabat and CONCOCT binning activated" >> GENERA-Assembler.log    
-        """ 
-    }
-    else{
-       println "GENERA info: no binning activated" 
-        """
-        echo "GENERA info: no binning activated" > METABAT_bin-FALSE.fa
-        echo "GENERA info: no binning activated" > CONCOCT_bin-FALSE.fa
-        echo "GENERA info: no binning activated" >> GENERA-Assembler.log
+        echo "GENERA info: binning method LR activated, SR skipped" >> GENERA-Assembler.log
         """ 
     }
 }
+
+//Binning
+process longreadsbinning {
+	//informations
+
+	//input output
+    input:
+    file "assembly_final.fasta" from pilon_ch5
+    file 'ont.fastq' from ontreads_ch3
+    file 'pb.fastq' from pbreads_ch3
+    file "GENERA-Assembler.log" from log_ch7
+    val cpu from params.cpu
+    
+    output:
+    file 'LRB_bin-*.fa' into binsLR_ch1
+    file 'LRB_bin-*.fa' into binsLR_ch2
+    file "GENERA-Assembler.log" into log_ch8
+
+
+    //script
+    script:
+    if (params.binningmethod == 'LR' || params.binningmethod == 'both') {
+        if (params.ontreads != 'no'){
+            """ 
+            lrbinner.py contigs --reads-path ont.fastq --contigs assembly_final.fasta --output LRBIN --separate --threads $cpu
+            mv LRBIN/binned_contigs/* .
+            find Bin*.fasta | cut -f2 -d"-" | cut -f1 -d"."> list
+            for f in `cat list`; do mv Bin-\$f.fasta LRB_bin-\$f.fa; done
+            echo "GENERA info: binning method LR activated, use ONT" >> GENERA-Assembler.log
+            """
+        }
+        else if (params.pbreads != 'no'){
+            """ 
+            lrbinner.py contigs --reads-path pb.fastq --contigs assembly_final.fasta --output LRBIN --separate --threads $cpu
+            mv LRBIN/binned_contigs/* .
+            find Bin*.fasta | cut -f2 -d"-" | cut -f1 -d"."> list
+            for f in `cat list`; do mv Bin-\$f.fasta LRB_bin-\$f.fa; done
+            echo "GENERA info: binning method LR activated, use PB" >> GENERA-Assembler.log
+            """            
+        }
+        else {
+            """ 
+            echo "GENERA info: no binning method LR activated" > LRB_bin-FALSE.fa
+            echo "GENERA info: no binning method LR activated" >> GENERA-Assembler.log
+            """            
+        }
+    }
+    else {
+        """ 
+        echo "GENERA info: no binning method LR activated" > LRB_bin-FALSE.fa
+        echo "GENERA info: no binning method LR activated" >> GENERA-Assembler.log
+        """ 
+    }
+}
+
 
 //RagTag mapping
 process ragtag {
@@ -604,16 +703,15 @@ process ragtag {
 
 	//input output
     input:
-    file "assembly_final.fasta" from pilon_ch5
+    file "assembly_final.fasta" from pilon_ch6
     file 'reference.fasta' from refgenome_ch
-    file "GENERA-Assembler.log" from log_ch7
+    file "GENERA-Assembler.log" from log_ch8
     val cpu from params.cpu
     
     output:
     file "assembly_final.fasta" into ragoo_ch1
     file "assembly_final.fasta" into ragoo_ch2
-    file "assembly_final.fasta" into ragoo_ch3
-    file "GENERA-Assembler.log" into log_ch8
+    file "GENERA-Assembler.log" into log_ch9
 
     //script
     script:
@@ -648,61 +746,6 @@ process ragtag {
     }
 }
 
-//Quast
-process quast {
-	//informations
-  
-	//input output
-    input:
-    file "assembly_final.fasta" from ragoo_ch3
-    file 'METABAT_bin-*.fa' from binsM_ch1
-    file 'CONCOCT_bin-*.fa' from binsC_ch1
-    file "GENERA-Assembler.log" from log_ch8
-    val cpu from params.cpu
-
-    output:
-    file "all-quast.results" into quast_ch
-    file "GENERA-Assembler.log" into log_ch9
-
-
-    //script
-    script:
-    if (params.binner == 'none'){
-        println "GENERA info: no binning activated, quast will run on genome"
-        """
-        quast.py assembly_final.fasta -t $cpu
-        cat quast_results/*/report.txt > all-quast.results
-        echo "GENERA info: no binning activated, quast will run on genome" >> GENERA-Assembler.log
-        """
-    }
-    else if (params.binner == 'metabat'){
-        println "GENERA info: metabat binning activated, quast will run on bins"
-        """
-        for f in METABAT_bin-*.fa; do quast.py \$f -t $cpu; done
-        cat quast_results/*/report.txt > all-quast.results
-        echo "GENERA info: metabat binning activated, quast will run on bins" >> GENERA-Assembler.log
-        """
-    }
-    else if (params.binner == 'concoct'){
-        println "GENERA info: concoct binning activated, quast will run on bins"
-        """
-        for f in CONCOCT_bin-*.fa; do quast.py \$f -t $cpu; done
-        cat quast_results/*/report.txt > all-quast.results
-        echo "GENERA info: concoct binning activated, quast will run on bins" >> GENERA-Assembler.log
-        """
-    }
-    else if (params.binner == 'all'){
-        println "GENERA info: all binning activated, quast will run on bins"
-        """
-        for f in METABAT_bin-*.fa; do quast.py \$f -t $cpu; done
-        for f in CONCOCT_bin-*.fa; do quast.py \$f -t $cpu; done
-        cat quast_results/*/report.txt > all-quast.results
-        echo "GENERA info: all binning activated, quast will run on bins" >> GENERA-Assembler.log
-        """
-    }
-
-}
-
 //output the results
 process publicationResults {
 	//informations
@@ -717,7 +760,7 @@ process publicationResults {
     file "depth.txt" from depthSR_ch1
     file 'METABAT_bin-*.fa' from binsM_ch2
     file 'CONCOCT_bin-*.fa' from binsC_ch2
-    file "all-quast.results" from quast_ch
+    file 'LRB_bin-*.fa' from binsLR_ch1
     file "GENERA-Assembler.log" from log_ch9
     val binner from params.binner
     val companion from params.companion
@@ -732,8 +775,8 @@ process publicationResults {
     file "ShortReads-coverage.txt" into depthSRFINAL_ch
     file 'METABAT_bin-*.fasta' into binsMFINAL_ch
     file 'CONCOCT_bin-*.fasta' into binsCFINAL_ch
+    file 'LRB_bin-*.fasta' into binsLRFINAL_ch
     file "GENERA-Assembler.log" into logFINAL_ch
-    file "quast.results" into quastFINAL_ch
 
     //script
     script:
@@ -744,8 +787,8 @@ process publicationResults {
         mv assembly_final.fasta Genome.fasta
         mv sam.cov LongReads-coverage.txt
         mv depth.txt ShortReads-coverage.txt
-        mv all-quast.results quast.results
         #Compute percentage of binning
+        rm -f LRB_bin-unbinned.fa
         $companion Genome.fasta --mode=$binner
         mv binned.info GENERA-Assembler.log
         echo "GENERA info: binning activated, binned percentage computed" >> GENERA-Assembler.log
@@ -756,6 +799,8 @@ process publicationResults {
         for f in `cat concoct.list`; do mv \$f.fa \$f.fasta; done
         find METABAT_bin-*.fa | cut -f1 -d"." > metabat.list
         for f in `cat metabat.list`; do mv \$f.fa \$f.fasta; done
+        find LRB_bin-*.fa | cut -f1 -d"." > lrb.list
+        for f in `cat lrb.list`; do mv \$f.fa \$f.fasta; done
         """
     }
     else{
@@ -765,7 +810,6 @@ process publicationResults {
         mv assembly_final.fasta Genome.fasta
         mv sam.cov LongReads-coverage.txt
         mv depth.txt ShortReads-coverage.txt
-        mv all-quast.results quast.results
         echo "GENERA info: no binning activated, no binned percentage computed" >> GENERA-Assembler.log
         echo VERSION: >> GENERA-Assembler.log
         echo $version >> GENERA-Assembler.log
@@ -773,6 +817,8 @@ process publicationResults {
         for f in `cat concoct.list`; do mv \$f.fa \$f.fasta; done
         find METABAT_bin-*.fa | cut -f1 -d"." > metabat.list
         for f in `cat metabat.list`; do mv \$f.fa \$f.fasta; done
+        find LRB_bin-*.fa | cut -f1 -d"." > lrb.list
+        for f in `cat lrb.list`; do mv \$f.fa \$f.fasta; done
         """
     }
 }

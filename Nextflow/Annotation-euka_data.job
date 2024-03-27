@@ -1,0 +1,31 @@
+#!/bin/bash
+# Submission script for Nic5
+#SBATCH --time=5-01:00:00 # days-hh:mm:ss
+#
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=20
+#SBATCH --mem-per-cpu=2625 # megabytes
+#SBATCH --partition=bio
+
+export OMP_NUM_THREADS=20
+export MKL_NUM_THREADS=20
+
+mkdir GENERA-annotation-<SAMPLE>
+#pass on Data/
+ssh nic5-w074
+cd /data/GENERA/AMAW/
+mkdir <SAMPLE>
+cd <SAMPLE>/
+rm -rf augustus-config/
+cp -r /scratch/ulg/GENERA/Databases/AMAW/augustus-config .
+mkdir NCBI
+cd NCBI
+mkdir .ncbi
+cp /scratch/ulg/GENERA/Nextflow-scripts/user-settings.mkfg .ncbi/
+cd ../
+cp /scratch/ulg/bioec/lcornet/TEMP/AMAW/GCF_000146045.2.fna .
+singularity exec --bind /scratch/ulg/GENERA/Databases/AMAW:/temp,/data/GENERA/AMAW/<SAMPLE>/NCBI:${HOME},/data/GENERA/AMAW/<SAMPLE>:/mnt --contain --workdir /data/GENERA/AMAW/<SAMPLE> /scratch/ulg/GENERA/amaw.sif amaw.pl --genome=/mnt/<genome> --organism=<organism> --proteins=1 --est=1 --taxdir=/temp/taxdump/ --maker-cpus=20 --trinity-cpus=20 --rsem-cpus=20 --augustus-db=/mnt/augustus-config/ --outdir=/mnt/GENERA-annotation --prot-dbs=/temp/prot_dbs/ --sra-list=<SRA>
+#get back info
+mv GENERA-annotation/* /scratch/ulg/bioec/lcornet/TEMP/AMAW/GENERA-annotation-<SAMPLE>/
+cd ../
+#rm -rf SAMPLE01
